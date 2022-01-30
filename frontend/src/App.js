@@ -12,7 +12,7 @@ function App() {
 	const [aboutPlayer, setAboutPlayer] = useState({ name: "", cards: [] });
 
 	useEffect(() => {
-		const newSocket = io("http://localhost:8000");
+		const newSocket = io("http://192.168.101.7:8000");
 		setSocket(newSocket);
 		//try to get room id from url
 		const query = new URLSearchParams(window.location.search);
@@ -25,13 +25,12 @@ function App() {
 	useEffect(() => {
 		if (!socket) return;
 		socket.on("connect", () => {
-			// console.log(socket);
+			//code on connect
 		});
 		socket.on("welcome", (res) => {
 			setClientId(res.clientId);
 		});
 		socket.on("stateUpdate", (res) => {
-			console.log(res);
 			setGameState(res);
 		});
 
@@ -44,15 +43,10 @@ function App() {
 		if (!gameState) return;
 		for (let i = 0; i < gameState.players.length; i++) {
 			if (gameState.players[i].clientId === clientId) {
-				console.log(clientId);
 				setAboutPlayer({ ...aboutPlayer, cards: gameState.players[i].cards });
 			}
 		}
 	}, [gameState]);
-
-	useEffect(() => {
-		console.log(aboutPlayer);
-	}, [aboutPlayer]);
 
 	const makeGame = () => {
 		if (!aboutPlayer.name || aboutPlayer.name.length < 3) {
@@ -116,9 +110,7 @@ function App() {
 					})}
 			</header>
 
-			<div>
 				<Deck cards={aboutPlayer.cards}></Deck>
-			</div>
 		</div>
 	);
 }

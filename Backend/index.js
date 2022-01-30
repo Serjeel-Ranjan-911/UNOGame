@@ -22,7 +22,6 @@ const shuffle = (cards) => {
 	}
 };
 
-shuffle(cards);
 //State
 //Will replace this with redis in future
 var state = {};
@@ -51,9 +50,12 @@ io.sockets.on("connection", (socket) => {
 		socketIdToClientId[socket.id] = clientId;
 		clientIdToRoomId[clientId] = randomRoom;
 
+		//shuffling a fresh deck of cards for this room
+		shuffle(cards);
+		const newDeck = [...cards]
+
 		//generaring cards for client
-		let strippedDeck = [];
-		for (let i = 0; i < 7; i++) strippedDeck.push(cards.pop());
+		let strippedDeck = newDeck.splice(0, 7);
 
 		//updating state
 		state[randomRoom] = {
@@ -65,7 +67,7 @@ io.sockets.on("connection", (socket) => {
 					cards: strippedDeck,
 				},
 			],
-			deckStack: cards,
+			deckStack: newDeck, //give a copy to room
 		};
 		//returning roomId to the client
 		socket.emit("makeGame", { gameId: randomRoom });
@@ -76,8 +78,8 @@ io.sockets.on("connection", (socket) => {
 	socket.on("joinGame", (req) => {
 		socket.join(req.gameId);
 		//generaring cards for client
-		let strippedDeck = [];
-		for (let i = 0; i < 7; i++) strippedDeck.push(cards.pop());
+		let strippedDeck = state[req.gameId].deckStack.splice(0, 7);
+
 
 		const clientId = req.clientId;
 
