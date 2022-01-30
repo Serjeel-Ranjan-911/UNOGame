@@ -1,0 +1,38 @@
+.container {
+	width: auto;
+	height: 80vh;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.deck {
+	width: 100%;
+	height: auto;
+	// background-color: red;
+	position: relative;
+	transform: rotateX(15deg);
+
+	@media screen and(min-width: 900px) {
+		width: 40%;
+	}
+}
+
+.cardBox {
+	width: 60%;
+	height: auto;
+	// background-color: green;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform-origin: bottom center;
+	transform: translate(-50%, -50%);
+}
+.card {
+	width: 100%;
+	height: 100%;
+
+	box-shadow: 6px 6px 10px 2px #2f0a5256;
+	border-radius: 15px;
+	border: 2px solid rgb(255, 255, 255);
+}
