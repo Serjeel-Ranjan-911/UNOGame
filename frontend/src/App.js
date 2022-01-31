@@ -2,13 +2,24 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import io from "socket.io-client";
 import uuid from "react-uuid";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 import Deck from "./Deck/Deck.js";
 
 function App() {
 	const [clientId, setClientId] = useState(null);
 	const [gameId, setGameId] = useState("");
 	const [socket, setSocket] = useState(null);
-	const [gameState, setGameState] = useState(null); //to store game state coming from server
+	const [gameState, setGameState] = useState({
+		owner: "",
+		players: [],
+		deckState: [],
+		currentTurn: {
+			name: "",
+			id: "",
+		},
+	}); //to store game state coming from server
 	const [aboutPlayer, setAboutPlayer] = useState({ name: "", cards: [] }); //data shown in UI
 
 	useEffect(() => {
@@ -79,17 +90,29 @@ function App() {
 		});
 	};
 
+	//returns true if server accepted otherwise false
 	const throwCard = (id) => {
+		//client side check for an invalid throw
+		if (clientId !== gameState.currentTurn.clientId) return false;
+		let type = null;
 		aboutPlayer.cards.forEach((card) => {
 			if (card.id === id) {
-				alert("You played " + card.type);
-				console.log(card.type + " card was flicked");
+				type = card.type;
 			}
 		});
-		setAboutPlayer({
-			...aboutPlayer,
-			cards: aboutPlayer.cards.filter((val) => val.id !== id),
-		});
+
+		//trying to replicate server call
+		if (Math.random() > 0.5) {
+			setAboutPlayer({
+				...aboutPlayer,
+				cards: aboutPlayer.cards.filter((val) => val.id !== id),
+			});
+			toast(type + " card was thrown!!!");
+			return true;
+		} else {
+			console.log("0");
+			return false;
+		}
 	};
 
 	// useEffect(()=>{
@@ -98,7 +121,15 @@ function App() {
 
 	return (
 		<div className="App">
+			<ToastContainer
+				position="bottom-center"
+				autoClose={5000}
+				hideProgressBar={false}
+				newestOnTop={true}
+				closeOnClick
+			/>
 			<header className="App-header">
+				{gameState && <p>{gameState.currentTurn.name}'s Turn</p>}
 				<h2>Hi my client Id is {clientId}</h2>
 				<h3>Room - {gameId}</h3>
 

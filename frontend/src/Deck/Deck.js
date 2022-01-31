@@ -1,10 +1,6 @@
 import style from "./Deck.module.scss";
 import { useEffect, useState } from "react";
-import { Slider } from "antd";
-import { Button } from "antd";
-
-// import { useSpring, animated } from "@react-spring/web";
-// import { useDrag } from "@use-gesture/react";
+import { Slider,Button } from "antd";
 
 import { useSprings, animated, interpolate } from "react-spring";
 import { useGesture } from "react-use-gesture";
@@ -19,6 +15,8 @@ const to = (i) => ({
 });
 const from = (i) => ({ x: 0, y: -1000 });
 
+var cardUnderProcess = ""; //global variable to store the id of card under process
+
 const Deck = (props) => {
 	//angle gap between the cards
 	const [angleGap, setAngleGap] = useState(2);
@@ -30,13 +28,8 @@ const Deck = (props) => {
 	//input from slider
 	const [spreadSliderValue, setSpreadSliderValue] = useState(0);
 	const [toggleShowCard, setToggleShowCard] = useState(false);
-	const [selectedCard, setSelectedCard] = useState({
-		type: "",
-		idx: -1,
-	});
 
-	// testing
-	const [gone] = useState(() => new Set());
+	// for gestures
 	const [springCards, setSpringCards] = useSprings(props.cards.length, (i) => ({
 		...to(i),
 		from: from(i),
@@ -47,27 +40,46 @@ const Deck = (props) => {
 			//check if card was thrown with sufficient velocity
 			const trigger = velocity > 0.2;
 
-			if (!down && trigger) gone.add(id);
+			//conditions to throw a card
+			if (cardUnderProcess === "" && !down && trigger) cardUnderProcess = id;
+
 			setSpringCards((i) => {
 				if (id !== props.cards[i].id) return;
-				const isGone = gone.has(props.cards[i].id);
-				if (isGone) {
-					//code if card was thrown successfully
-					setTimeout(()=>{
-						props.throwCard(props.cards[i].id);
-						setSpringCards(i=>to(i))
-					},1000);
+
+				if (cardUnderProcess === id) {
+					//try to throw card here
+					setTimeout(() => {
+						
+						if(props.throwCard(cardUnderProcess)){
+						//throw was successfull
+						setSpringCards((i) => to(i)); //bring the card div back to view
+
+						}else{
+						//throw was unsuccessfull
+						
+						setSpringCards((i) => to(i)); //bring the card div back to view
+					}
+						cardUnderProcess = "";
+					}, 1000); //wait sometime for card to process
 				}
-				const y = isGone
-					? (200 + window.innerHeight) * -1
-					: down
-					? -1 * xDelta
-					: 0;
+
+				// positional arguements
 				return {
-					y,
-					config: { friction: 50, tension: down ? 800 : isGone ? 200 : 500 },
+					y:
+						cardUnderProcess === id
+							? (200 + window.innerHeight) * -1
+							: down
+							? -1 * xDelta
+							: 0,
+					config: {
+						friction: 50,
+						tension: down ? 800 : cardUnderProcess === id ? 200 : 500,
+					},
 				};
 			});
+
+			// if(!down && props.cards[i].id !== cardUnderProcess)
+			// 	setTimeout(() => set((i) => to(i)), 600);
 		}
 	);
 
@@ -107,7 +119,6 @@ const Deck = (props) => {
 				type="primary"
 				onClick={() => {
 					//unselect the cards before hiding them
-					setSelectedCard({ type: "", idx: -1 });
 					setToggleShowCard(!toggleShowCard);
 					// setTimeout(() => setToggleShowCard(!toggleShowCard), 1000);
 				}}
@@ -145,22 +156,13 @@ const Deck = (props) => {
 										)}deg)`,
 									}}
 									className={style.cardBox}
-									// id={props.cards[i]}
-									// onClick={(e) => {
-									// 	console.log(e.currentTarget.id);
-									// 	if (selectedCard.idx !== i)
-									// 		setSelectedCard({ type: e.currentTarget.id, idx: i });
-									// 	else setSelectedCard({ type: "", idx: -1 });
-									// }}
 								>
 									<img
 										id="card"
 										className={[
 											style.card,
 											toggleShowCard ? style.flip : "",
-											// selectedCard.idx === idx ? style.selected : "",
 										].join(" ")}
-										// src={(toggleShowCard?`/cards/Basic/back.svg`:`/cards/Basic/${card}.svg`)}
 										src={`/cards/Basic/${props.cards[i].type}.svg`}
 										alt={props.cards[i].type}
 									/>

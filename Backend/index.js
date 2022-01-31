@@ -68,6 +68,10 @@ io.sockets.on("connection", (socket) => {
 				},
 			],
 			deckStack: newDeck, //give a copy to room
+			currentTurn: {
+				name: req.name,
+				clientId
+			}
 		};
 		//returning roomId to the client
 		socket.emit("makeGame", { gameId: randomRoom });
