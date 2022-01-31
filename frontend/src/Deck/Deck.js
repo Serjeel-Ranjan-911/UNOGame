@@ -3,22 +3,73 @@ import { useEffect, useState } from "react";
 import { Slider } from "antd";
 import { Button } from "antd";
 
+// import { useSpring, animated } from "@react-spring/web";
+// import { useDrag } from "@use-gesture/react";
+
+import { useSprings, animated, interpolate } from "react-spring";
+import { useGesture } from "react-use-gesture";
+
 const defaultLeftAngle = -15;
 const defaultRightAngle = 50;
 
-const Deck = (props) => {
-	const [angleGap, setAngleGap] = useState(2);
+// animators
+const to = (i) => ({
+	x: 0,
+	y: i * -4,
+});
+const from = (i) => ({ x: 0, y: -1000 });
 
+const Deck = (props) => {
+	//angle gap between the cards
+	const [angleGap, setAngleGap] = useState(2);
+	//maximum angle that card can go left and right
 	const [angleSpread, setAngleSpread] = useState({
 		left: defaultLeftAngle,
 		right: defaultRightAngle,
 	});
+	//input from slider
 	const [spreadSliderValue, setSpreadSliderValue] = useState(0);
 	const [toggleShowCard, setToggleShowCard] = useState(false);
 	const [selectedCard, setSelectedCard] = useState({
 		type: "",
 		idx: -1,
 	});
+
+	// testing
+	const [gone] = useState(() => new Set());
+	const [springCards, setSpringCards] = useSprings(props.cards.length, (i) => ({
+		...to(i),
+		from: from(i),
+		delay: i * 100 + 500,
+	}));
+	const bind = useGesture(
+		({ args: [id], down, delta: [xDelta], direction, velocity }) => {
+			//check if card was thrown with sufficient velocity
+			const trigger = velocity > 0.2;
+
+			if (!down && trigger) gone.add(id);
+			setSpringCards((i) => {
+				if (id !== props.cards[i].id) return;
+				const isGone = gone.has(props.cards[i].id);
+				if (isGone) {
+					//code if card was thrown successfully
+					setTimeout(()=>{
+						props.throwCard(props.cards[i].id);
+						setSpringCards(i=>to(i))
+					},1000);
+				}
+				const y = isGone
+					? (200 + window.innerHeight) * -1
+					: down
+					? -1 * xDelta
+					: 0;
+				return {
+					y,
+					config: { friction: 50, tension: down ? 800 : isGone ? 200 : 500 },
+				};
+			});
+		}
+	);
 
 	useEffect(() => {
 		if (props.cards.length > 1)
@@ -52,66 +103,79 @@ const Deck = (props) => {
 
 	return (
 		<>
-			<div className={style.container}>
-				<div className={style.deck}>
-					{props.cards &&
-						props.cards.map((card, idx) => (
-							<div
-								style={{
-									transform: `translate(-50%, -50%) rotate(${parseInt(
-										angleSpread.left + idx * angleGap
-									)}deg)`,
-								}}
-								className={style.cardBox}
-								id={card}
-								onClick={(e) => {
-									console.log(e.currentTarget.id);
-									if (selectedCard.idx !== idx)
-										setSelectedCard({ type: e.currentTarget.id, idx });
-									else setSelectedCard({ type: "", idx: -1 });
-								}}
+			<Button
+				type="primary"
+				onClick={() => {
+					//unselect the cards before hiding them
+					setSelectedCard({ type: "", idx: -1 });
+					setToggleShowCard(!toggleShowCard);
+					// setTimeout(() => setToggleShowCard(!toggleShowCard), 1000);
+				}}
+			>
+				{toggleShowCard ? "Show Cards" : "Hide Cards"}
+			</Button>
+
+			<div
+				style={{
+					width: "100vw",
+					backgroundColor: "pink",
+				}}
+			>
+				{props.cards &&
+					springCards.map(({ x, y }, i) => (
+						<animated.div
+							id={props.cards[i].id}
+							key={props.cards[i].id}
+							style={{
+								transform: interpolate(
+									[x, y],
+									(x, y) => `translate3d(${x}px,${y}px,0)`
+								),
+							}}
+						>
+							<animated.div
+								{...bind(props.cards[i].id)}
+								style={{ transform: "translate(-38%,-50%)" }}
 							>
-								<img
-									id="card"
-									className={[
-										style.card,
-										toggleShowCard ? style.flip : "",
-										selectedCard.idx === idx ? style.selected : "",
-									].join(" ")}
-									// src={(toggleShowCard?`/cards/Basic/back.svg`:`/cards/Basic/${card}.svg`)}
-									src={`/cards/Basic/${card}.svg`}
-									alt={card}
-								/>
-							</div>
-						))}
-				</div>
-
-				<div className={style.slider}>
-					<Slider
-						min={-25}
-						max={25}
-						// step={1}
-						value={spreadSliderValue}
-						onChange={(value) => setSpreadSliderValue(value)}
-						// onAfterChange={(value) => {
-						// 	setAngleSpread({
-						// 		left: defaultLeftAngle - value,
-						// 		right: defaultRightAngle + value,
-						// 	});
-						// }}
-					/>
-				</div>
-
-				<Button
-					type="primary"
-					onClick={() => {
-						//unselect the cards before hiding them
-						setSelectedCard({ type: "", idx: -1 });
-						setTimeout(() => setToggleShowCard(!toggleShowCard), 1000);
-					}}
-				>
-					{toggleShowCard ? "Show Cards" : "Hide Cards"}
-				</Button>
+								<div
+									style={{
+										transformOrigin: "bottom center",
+										transform: `rotate(${parseInt(
+											angleSpread.left + i * angleGap
+										)}deg)`,
+									}}
+									className={style.cardBox}
+									// id={props.cards[i]}
+									// onClick={(e) => {
+									// 	console.log(e.currentTarget.id);
+									// 	if (selectedCard.idx !== i)
+									// 		setSelectedCard({ type: e.currentTarget.id, idx: i });
+									// 	else setSelectedCard({ type: "", idx: -1 });
+									// }}
+								>
+									<img
+										id="card"
+										className={[
+											style.card,
+											toggleShowCard ? style.flip : "",
+											// selectedCard.idx === idx ? style.selected : "",
+										].join(" ")}
+										// src={(toggleShowCard?`/cards/Basic/back.svg`:`/cards/Basic/${card}.svg`)}
+										src={`/cards/Basic/${props.cards[i].type}.svg`}
+										alt={props.cards[i].type}
+									/>
+								</div>
+							</animated.div>
+						</animated.div>
+					))}
+			</div>
+			<div className={style.slider}>
+				<Slider
+					min={-25}
+					max={25}
+					value={spreadSliderValue}
+					onChange={(value) => setSpreadSliderValue(value)}
+				/>
 			</div>
 		</>
 	);

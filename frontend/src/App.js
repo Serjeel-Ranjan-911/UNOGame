@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import io from "socket.io-client";
-
+import uuid from "react-uuid";
 import Deck from "./Deck/Deck.js";
 
 function App() {
 	const [clientId, setClientId] = useState(null);
 	const [gameId, setGameId] = useState("");
 	const [socket, setSocket] = useState(null);
-	const [gameState, setGameState] = useState(null);
-	const [aboutPlayer, setAboutPlayer] = useState({ name: "", cards: [] });
+	const [gameState, setGameState] = useState(null); //to store game state coming from server
+	const [aboutPlayer, setAboutPlayer] = useState({ name: "", cards: [] }); //data shown in UI
 
 	useEffect(() => {
 		const newSocket = io("http://192.168.101.7:8000");
@@ -43,7 +43,13 @@ function App() {
 		if (!gameState) return;
 		for (let i = 0; i < gameState.players.length; i++) {
 			if (gameState.players[i].clientId === clientId) {
-				setAboutPlayer({ ...aboutPlayer, cards: gameState.players[i].cards });
+				setAboutPlayer({
+					...aboutPlayer,
+					cards: gameState.players[i].cards.map((card, i) => ({
+						type: card,
+						id: uuid(),
+					})),
+				});
 			}
 		}
 	}, [gameState]);
@@ -72,6 +78,23 @@ function App() {
 			gameId: gameId,
 		});
 	};
+
+	const throwCard = (id) => {
+		aboutPlayer.cards.forEach((card) => {
+			if (card.id === id) {
+				alert("You played " + card.type);
+				console.log(card.type + " card was flicked");
+			}
+		});
+		setAboutPlayer({
+			...aboutPlayer,
+			cards: aboutPlayer.cards.filter((val) => val.id !== id),
+		});
+	};
+
+	// useEffect(()=>{
+	// 	console.log(aboutPlayer)
+	// },[aboutPlayer])
 
 	return (
 		<div className="App">
@@ -110,7 +133,26 @@ function App() {
 					})}
 			</header>
 
-				<Deck cards={aboutPlayer.cards}></Deck>
+			<Deck cards={aboutPlayer.cards} throwCard={throwCard}></Deck>
+
+			<div>
+				<button
+					onClick={() => {
+						setAboutPlayer({
+							...aboutPlayer,
+							cards: [
+								...aboutPlayer.cards,
+								{
+									type: "x4",
+									id: uuid(),
+								},
+							],
+						});
+					}}
+				>
+					Add card
+				</button>
+			</div>
 		</div>
 	);
 }
