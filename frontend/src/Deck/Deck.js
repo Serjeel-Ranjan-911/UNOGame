@@ -1,6 +1,6 @@
 import style from "./Deck.module.scss";
 import { useEffect, useState } from "react";
-import { Slider,Button } from "antd";
+import { Slider, Button } from "antd";
 
 import { useSprings, animated, interpolate } from "react-spring";
 import { useGesture } from "react-use-gesture";
@@ -12,10 +12,12 @@ const defaultRightAngle = 50;
 const to = (i) => ({
 	x: 0,
 	y: i * -4,
+	rot: -10 + Math.random() * 20,
 });
-const from = (i) => ({ x: 0, y: -1000 });
+const from = (i) => ({ x: 0, y: -1000, rot: 0 });
 
 var cardUnderProcess = ""; //global variable to store the id of card under process
+const numberOfCardsInoneHand = 7;
 
 const Deck = (props) => {
 	//angle gap between the cards
@@ -44,21 +46,21 @@ const Deck = (props) => {
 			if (cardUnderProcess === "" && !down && trigger) cardUnderProcess = id;
 
 			setSpringCards((i) => {
-				if (id !== props.cards[i].id) return;
+				if (id !== props.cards[i].id) {
+					return;
+				}
 
 				if (cardUnderProcess === id) {
 					//try to throw card here
 					setTimeout(() => {
-						
-						if(props.throwCard(cardUnderProcess)){
-						//throw was successfull
-						setSpringCards((i) => to(i)); //bring the card div back to view
+						if (props.throwCard(cardUnderProcess)) {
+							//throw was successfull
+							setSpringCards((i) => to(i)); //bring the card div back to view
+						} else {
+							//throw was unsuccessfull
 
-						}else{
-						//throw was unsuccessfull
-						
-						setSpringCards((i) => to(i)); //bring the card div back to view
-					}
+							setSpringCards((i) => to(i)); //bring the card div back to view
+						}
 						cardUnderProcess = "";
 					}, 1000); //wait sometime for card to process
 				}
@@ -78,8 +80,8 @@ const Deck = (props) => {
 				};
 			});
 
-			// if(!down && props.cards[i].id !== cardUnderProcess)
-			// 	setTimeout(() => set((i) => to(i)), 600);
+			if (!down && id !== cardUnderProcess)
+				setTimeout(() => setSpringCards((i) => to(i)), 600);
 		}
 	);
 
@@ -87,7 +89,7 @@ const Deck = (props) => {
 		if (props.cards.length > 1)
 			setAngleGap(
 				parseInt(
-					(angleSpread.right - angleSpread.left) / (props.cards.length - 1)
+					(angleSpread.right - angleSpread.left) / (numberOfCardsInoneHand - 1)
 				)
 			);
 	}, [props.cards, angleSpread]);
@@ -118,12 +120,23 @@ const Deck = (props) => {
 			<Button
 				type="primary"
 				onClick={() => {
-					//unselect the cards before hiding them
 					setToggleShowCard(!toggleShowCard);
-					// setTimeout(() => setToggleShowCard(!toggleShowCard), 1000);
 				}}
 			>
 				{toggleShowCard ? "Show Cards" : "Hide Cards"}
+			</Button>
+
+			<Button
+				type="primary"
+				onClick={() => {
+					setToggleShowCard(true); //hide cards first
+					setTimeout(() => {
+						props.shuffle();
+						setToggleShowCard(false); //show cards again
+					}, 1000);
+				}}
+			>
+				Shuffle
 			</Button>
 
 			<div
@@ -133,7 +146,7 @@ const Deck = (props) => {
 				}}
 			>
 				{props.cards &&
-					springCards.map(({ x, y }, i) => (
+					springCards.map(({ x, y, rot }, i) => (
 						<animated.div
 							id={props.cards[i].id}
 							key={props.cards[i].id}
@@ -152,8 +165,10 @@ const Deck = (props) => {
 									style={{
 										transformOrigin: "bottom center",
 										transform: `rotate(${parseInt(
-											angleSpread.left + i * angleGap
-										)}deg)`,
+											angleSpread.left + (i % numberOfCardsInoneHand) * angleGap
+										)}deg) translateY(${
+											7 * parseInt(i / numberOfCardsInoneHand)
+										}rem)`,
 									}}
 									className={style.cardBox}
 								>

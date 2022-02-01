@@ -1,0 +1,44 @@
+@font-face {
+	font-family: Kaushan;
+	src: url(./static/fonts/KaushanScript-Regular.ttf);
+}
+
+@font-face {
+	font-family: LatoRegular;
+	src: url(./static/fonts/Lato-Regular.ttf);
+}
+
+@font-face {
+	font-family: LatoBlack;
+	src: url(./static/fonts/Lato-Black.ttf);
+}
+
+@font-face {
+	font-family: LatoBold;
+	src: url(./static/fonts/Lato-Bold.ttf);
+}
+
+@font-face {
+	font-family: LatoItalic;
+	src: url(./static/fonts/Lato-Italic.ttf);
+}
+
+@font-face {
+	font-family: LatoThin;
+	src: url(./static/fonts/Lato-Thin.ttf);
+}
+
+@font-face {
+	font-family: OpenSansBold;
+	src: url(./static/fonts/OpenSans-Bold.ttf);
+}
+
+@font-face {
+	font-family: OpenSansExtraBold;
+	src: url(./static/fonts/OpenSans-ExtraBold.ttf);
+}
+
+@font-face {
+	font-family: Sacramento;
+	src: url(./static/fonts/Sacramento-Regular.ttf);
+}

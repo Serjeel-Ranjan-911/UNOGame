@@ -71,6 +71,10 @@ io.sockets.on("connection", (socket) => {
 			currentTurn: {
 				name: req.name,
 				clientId
+			},
+			stackTop: {
+				color: 'r',
+				number: '7'
 			}
 		};
 		//returning roomId to the client

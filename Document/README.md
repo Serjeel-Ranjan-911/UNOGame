@@ -98,7 +98,7 @@ Response
 
 Each card in game is represented using two letters. First letter represent color and second one number.
 
-Special cards have first letter as "x" representing no color
+Action cards have first letter as "x" representing no color
 
 ```json
 [
