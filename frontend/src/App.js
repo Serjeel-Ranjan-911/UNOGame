@@ -51,8 +51,7 @@ function App() {
 		});
 		socket.on("stateUpdate", (res) => {
 			// if server sent us the state this means player is in game
-			//no need display modal
-			setIsModalVisible(false)
+			//no need display modals
 			setInGame(true);
 			setGameState(res);
 		});
@@ -82,7 +81,7 @@ function App() {
 
 	const makeGame = () => {
 		if (!aboutPlayer.name || aboutPlayer.name.length < 3) {
-			toast("Please enter a valid name");
+			toast.warn("Please enter a valid name :exclamation:");
 			return;
 		}
 
@@ -94,12 +93,12 @@ function App() {
 
 	const joinGame = () => {
 		if (!aboutPlayer.name || aboutPlayer.name.length < 3) {
-			toast("Please enter a valid name");
+			toast.warn("Please enter a valid name!");
 			return;
 		}
 
 		if (!gameId || gameId.length !== 36) {
-			toast("Please enter a valid Game ID");
+			toast.warn("Please enter a valid Game ID!");
 			return;
 		}
 
@@ -113,7 +112,10 @@ function App() {
 	//returns true if server accepted otherwise false
 	const throwCard = (id) => {
 		//client side check for an invalid player throw
-		if (clientId !== gameState.currentTurn.clientId) return false;
+		if (clientId !== gameState.currentTurn.clientId) {
+			toast.warn("Not your turn !");
+			return false;
+		}
 
 		//identify the type of card
 		let type = null;
@@ -131,7 +133,7 @@ function App() {
 				type[1] === gameState.stackTop.number
 			)
 		) {
-			toast(`Can't throw this card!!!`);
+			toast.warn(`Can't throw this card !`);
 			return false;
 		}
 
@@ -141,7 +143,7 @@ function App() {
 				...aboutPlayer,
 				cards: aboutPlayer.cards.filter((val) => val.id !== id),
 			});
-			toast(type + " card was thrown!!!");
+			toast.success(type + " card was thrown");
 			return true;
 		} else {
 			console.log("0");
@@ -161,6 +163,16 @@ function App() {
 		}
 		return arr;
 	};
+
+	const enterFullScreen = ()=>{
+		var el = document.body;
+		var requestMethod =
+			el.requestFullScreen ||
+			el.webkitRequestFullScreen ||
+			el.mozRequestFullScreen ||
+			el.msRequestFullScreen;
+		requestMethod.call(el);
+	}
 
 	//shuffle cards in hand
 	const shuffle = () => {
@@ -205,9 +217,11 @@ function App() {
 				closable={false}
 				onOk={() => {
 					setIsModalVisible(false);
+					enterFullScreen();
 				}}
 				onCancel={() => {
 					setIsModalVisible(false);
+					enterFullScreen();
 				}}
 			>
 				<div className="modalWrapper">
@@ -251,12 +265,15 @@ function App() {
 					</>
 				)}
 
-				{shareableUrl ? <>
-				
-				<p className="modalText">{shareableUrl}</p>
-				<p className="modalText">Click <b>OK</b> to proceed</p>
-				</>
-				 : null}
+				{/* show the url if user created the game */}
+				{shareableUrl ? <p className="modalText">{shareableUrl}</p> : null}
+
+				{/* once user get in game he should close the modal */}
+				{inGame ? (
+					<p className="modalText">
+						Click <b>OK</b> to proceed
+					</p>
+				) : null}
 			</Modal>
 
 			<header className="App-header">
@@ -267,17 +284,17 @@ function App() {
 				)}
 			</header>
 
-			<div>
-				<Deck
-					cards={aboutPlayer.cards}
-					throwCard={throwCard}
-					shuffle={shuffle}
-				></Deck>
-			</div>
-
-			<div>
-				<Button onClick={drawACard}>Pick Card</Button>
-			</div>
+			{/* only display deck if there are some cards */}
+			{aboutPlayer.cards.length > 0 && (
+				<div className="deckContainer">
+					<Deck
+						cards={aboutPlayer.cards}
+						throwCard={throwCard}
+						shuffle={shuffle}
+						drawACard={drawACard}
+					></Deck>
+				</div>
+			)}
 		</div>
 	);
 }
