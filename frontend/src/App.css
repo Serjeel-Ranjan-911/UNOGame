@@ -11,6 +11,29 @@
 	position: relative;
 }
 
+.Container {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+}
+
+.title {
+	color: #fff;
+	-webkit-text-stroke: 1px #5769f2;
+	font-size: 1.5rem;
+	font-weight: bold;
+}
+
+.brokenRobo {
+	width: 80%;
+	height: auto;
+}
+
 p {
 	margin: 0;
 }
@@ -45,12 +68,12 @@ p {
 	justify-content: space-around;
 }
 
-.modalText{
-    font-size: 1rem;
-    color: #8f8f8f;
+.modalText {
+	font-size: 1rem;
+	color: #8f8f8f;
 }
 
-.deckContainer{
+.deckContainer {
 	position: absolute;
 	bottom: 0;
 	left: 0;
@@ -59,8 +82,56 @@ p {
 
 	display: flex;
 	flex-direction: column;
-	justify-content: end;
+	justify-content: flex-end;
 	align-items: center;
 
 	overflow: hidden;
+}
+
+.roomContainer {
+	position: absolute;
+	top: 2rem;
+	left: 0;
+	height: 25vh;
+	width: 100%;
+
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-start;
+	align-items: center;
+}
+
+.stackContainer {
+	position: absolute;
+	top: 2rem;
+	left: 0;
+	height: 25vh;
+	width: 100%;
+
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: center;
+}
+
+.stack {
+	position: relative;
+    transform: translate(0,-50%);
+    width: 5rem;
+    height: 4rem;
+	user-select: none;
+}
+
+.stackCard {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: auto;
+
+	transform: rotateX(60deg) rotateY(0deg) rotateZ(-45deg);
+	
+	box-shadow: 2px 2px 20px 2px #000c2559;
+	border-radius: 5px;
+	border: 1px solid rgb(255, 255, 255);
 }

@@ -1,0 +1,40 @@
+.container{
+    width: 50%;
+}
+
+.singlePlayer{
+    width: fit-content;
+    background-color: #ff7474;;
+    padding: 4px 12px;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    margin: 3px 0;
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: bold;
+    > *{
+        margin: 0 3px;
+    }
+}
+
+.stickLeft{
+    border-radius: 0 50px 50px 0;
+}
+
+.stickRight{
+    border-radius: 50px 0 0 50px;
+    margin-left: auto;
+    flex-direction: row-reverse;
+}
+
+.currentTurn{
+    box-shadow: 0 0 10px 4px #ff0076;
+}
+
+.playerIcon{
+    width: 2rem;
+    height: 2rem;
+    border: 2px solid white;
+    border-radius: 100px;
+}

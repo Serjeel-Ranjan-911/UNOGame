@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import io from "socket.io-client";
 import uuid from "react-uuid";
+import { isDesktop } from "react-device-detect";
 import { Input, Button, Modal } from "antd";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import Deck from "./Deck/Deck.js";
+import Room from "./Room/Room.js";
 
 function App() {
 	const [clientId, setClientId] = useState(null);
@@ -18,17 +20,23 @@ function App() {
 		deckState: [],
 		currentTurn: {
 			name: "",
-			id: "",
+			clientId: "",
 		},
 		stackTop: {
+			type: "",
 			color: "",
 			number: "",
 		},
 	}); //to store game state coming from server
-	const [aboutPlayer, setAboutPlayer] = useState({ name: "", cards: [] }); //data shown in UI
+	const [aboutPlayer, setAboutPlayer] = useState({
+		name: "",
+		cards: [],
+		idx: -1,
+	}); //data shown in UI
 	const [isModalVisible, setIsModalVisible] = useState(true);
 	const [inGame, setInGame] = useState(false);
 	const [shareableUrl, setShareableUrl] = useState(null);
+	const [orientationToggle,setOrientationToggle] = useState(false);
 
 	useEffect(() => {
 		const newSocket = io("http://192.168.101.7:8000");
@@ -39,7 +47,29 @@ function App() {
 		if (roomId) {
 			setGameId(roomId);
 		}
+
+		//checking if device is in portraint mode
+		window.addEventListener("orientationchange", function(){
+			if(window.orientation === -90 || window.orientation === 90)
+				setOrientationToggle(true)
+			else
+				setOrientationToggle(false)
+		});
+				
+		//function that give reload warning
+		const handleBeforeUnload = (e) => {
+			e.preventDefault();
+			e.returnValue = "reloading will throw you out of game";
+			return "reloading will throw you out of game";
+		};
+
+		window.addEventListener("beforeunload", handleBeforeUnload);
+		return () => {
+			window.removeEventListener("beforeunload", handleBeforeUnload);
+		};
 	}, []);
+
+
 
 	useEffect(() => {
 		if (!socket) return;
@@ -70,10 +100,11 @@ function App() {
 			if (gameState.players[i].clientId === clientId) {
 				setAboutPlayer({
 					...aboutPlayer,
-					cards: gameState.players[i].cards.map((card, i) => ({
+					cards: gameState.players[i].cards.map((card) => ({
 						type: card,
 						id: uuid(),
 					})),
+					idx: i,
 				});
 			}
 		}
@@ -126,6 +157,7 @@ function App() {
 		});
 		// client side check of an invalid card throw
 		// (check if card is action card or of valid color or number)
+		if (!type) return;
 		if (
 			type[0] !== "x" &&
 			!(
@@ -146,7 +178,6 @@ function App() {
 			toast.success(type + " card was thrown");
 			return true;
 		} else {
-			console.log("0");
 			return false;
 		}
 	};
@@ -164,7 +195,7 @@ function App() {
 		return arr;
 	};
 
-	const enterFullScreen = ()=>{
+	const enterFullScreen = () => {
 		var el = document.body;
 		var requestMethod =
 			el.requestFullScreen ||
@@ -172,7 +203,7 @@ function App() {
 			el.mozRequestFullScreen ||
 			el.msRequestFullScreen;
 		requestMethod.call(el);
-	}
+	};
 
 	//shuffle cards in hand
 	const shuffle = () => {
@@ -195,9 +226,30 @@ function App() {
 		});
 	};
 
-	// useEffect(()=>{
-	// 	console.log(aboutPlayer)
-	// },[aboutPlayer])
+	// can't play on desktop right now :(
+	if (isDesktop) {
+		return (
+			<div className="App">
+				<div className="Container">
+					<p className="title">Under development for desktops :(</p>
+					<p className="title">Enjoy on your phone</p>
+					<img className="brokenRobo" src="./robo.png" alt="broken robo" />
+				</div>
+			</div>
+		);
+	}
+	
+	// UI designed to be played in portrait mode
+	if(orientationToggle) {
+		return (
+			<div className="App">
+				<div className="Container">
+					<p className="title">Please play in portrait mode :(</p>
+					<img className="brokenRobo" src="./robo.png" alt="broken robo" />
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="App">
@@ -276,18 +328,35 @@ function App() {
 				) : null}
 			</Modal>
 
-			<header className="App-header">
-				{gameState && gameState.currentTurn.name !== "" && (
-					<div className="turnNameBox">
-						<p>{gameState.currentTurn.name}'s Turn</p>
-					</div>
-				)}
-			</header>
+			{gameState && gameState.currentTurn.name !== "" && (
+				<div className="turnNameBox">
+					<p>{gameState.currentTurn.name}'s Turn</p>
+				</div>
+			)}
+
+			<div className="stackContainer">
+				<div className="stack">
+				<img style={{transform: `rotateX(60deg) rotateY(0deg) rotateZ(-45deg) translateZ(6px)`}} className="stackCard"  src="/cards/Basic/back.svg" />
+				<img style={{transform: `rotateX(60deg) rotateY(0deg) rotateZ(-45deg) translateZ(9px)`}} className="stackCard"  src="/cards/Basic/back.svg" />
+				<img style={{transform: `rotateX(60deg) rotateY(0deg) rotateZ(-45deg) translateZ(12px)`}} className="stackCard" src="/cards/Basic/back.svg" />
+				<img style={{transform: `rotateX(60deg) rotateY(0deg) rotateZ(-45deg) translateZ(15px)`}} className="stackCard" src="/cards/Basic/back.svg" />
+				<img style={{transform: `rotateX(60deg) rotateY(0deg) rotateZ(-45deg) translateZ(18px)`}} className="stackCard" src="/cards/Basic/back.svg" />
+				<img style={{transform: `rotateX(60deg) rotateY(0deg) rotateZ(-45deg) translateZ(21px)`}} className="stackCard" src={`/cards/Basic/${gameState.stackTop.type}.svg`}/>
+				</div>
+			</div>
+
+			<div className="roomContainer">
+				<Room
+					players={gameState.players}
+					currentTurn={gameState.currentTurn.clientId}
+				></Room>
+			</div>
 
 			{/* only display deck if there are some cards */}
 			{aboutPlayer.cards.length > 0 && (
 				<div className="deckContainer">
 					<Deck
+						idx={aboutPlayer.idx}
 						cards={aboutPlayer.cards}
 						throwCard={throwCard}
 						shuffle={shuffle}

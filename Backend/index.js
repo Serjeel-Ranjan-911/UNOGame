@@ -73,6 +73,7 @@ io.sockets.on("connection", (socket) => {
 				clientId
 			},
 			stackTop: {
+				type: 'r7',
 				color: 'r',
 				number: '7'
 			}

@@ -117,35 +117,6 @@ const Deck = (props) => {
 
 	return (
 		<>
-			<div className={style.playButtons}>
-				<Button
-					ghost
-					type="primary"
-					onClick={() => {
-						setToggleShowCard(!toggleShowCard);
-					}}
-				>
-					{toggleShowCard ? "Show Cards" : "Hide Cards"}
-				</Button>
-
-				<Button ghost type="primary" onClick={props.drawACard}>
-					Pick Card
-				</Button>
-
-				<Button
-					ghost
-					type="primary"
-					onClick={() => {
-						setToggleShowCard(true); //hide cards first
-						setTimeout(() => {
-							props.shuffle();
-							setToggleShowCard(false); //show cards again
-						}, 1000);
-					}}
-				>
-					Shuffle
-				</Button>
-			</div>
 			<div className={style.cardsContainer}>
 				{props.cards &&
 					springCards.map(({ x, y, rot }, i) => (
@@ -188,7 +159,40 @@ const Deck = (props) => {
 							</animated.div>
 						</animated.div>
 					))}
+
+					<img className={style.avatarIcon} src={`/avatars/${props.idx}.jpeg`} alt="player avatar"/>
 			</div>
+
+			<div className={style.playButtons}>
+				<Button
+					ghost
+					type="primary"
+					onClick={() => {
+						setToggleShowCard(!toggleShowCard);
+					}}
+				>
+					{toggleShowCard ? "Show Cards" : "Hide Cards"}
+				</Button>
+
+				<Button ghost type="primary" onClick={props.drawACard}>
+					Pick Card
+				</Button>
+
+				<Button
+					ghost
+					type="primary"
+					onClick={() => {
+						setToggleShowCard(true); //hide cards first
+						setTimeout(() => {
+							props.shuffle();
+							setToggleShowCard(false); //show cards again
+						}, 1000);
+					}}
+				>
+					Shuffle
+				</Button>
+			</div>
+
 			<div className={style.slider}>
 				<Slider
 				tooltipVisible={false}
