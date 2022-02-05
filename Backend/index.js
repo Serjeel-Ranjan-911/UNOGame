@@ -1,4 +1,5 @@
 import express from "express";
+import path from "path";
 import { v1 as uuidv1, v4 as uuidv4 } from "uuid";
 import { Server } from "socket.io";
 
