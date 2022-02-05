@@ -1,0 +1,25 @@
+{
+  "files": {
+    "main.css": "/static/css/main.2d0ead26.css",
+    "main.js": "/static/js/main.877a160b.js",
+    "static/js/787.cda612ba.chunk.js": "/static/js/787.cda612ba.chunk.js",
+    "static/media/background.svg": "/static/media/background.de132ccf2d5792960354.svg",
+    "static/media/KaushanScript-Regular.ttf": "/static/media/KaushanScript-Regular.b721b739d0ff7289db4f.ttf",
+    "static/media/OpenSans-Bold.ttf": "/static/media/OpenSans-Bold.dbb97fd982ce1b96b6de.ttf",
+    "static/media/OpenSans-ExtraBold.ttf": "/static/media/OpenSans-ExtraBold.110e781b605b33c1b949.ttf",
+    "static/media/Lato-Italic.ttf": "/static/media/Lato-Italic.0b4ed00316a7940bfc3f.ttf",
+    "static/media/Lato-Regular.ttf": "/static/media/Lato-Regular.9919edff6283018571ad.ttf",
+    "static/media/Lato-Bold.ttf": "/static/media/Lato-Bold.5dd5aa0269395f0ea927.ttf",
+    "static/media/Lato-Thin.ttf": "/static/media/Lato-Thin.01923cbbba31d9cb7f29.ttf",
+    "static/media/Lato-Black.ttf": "/static/media/Lato-Black.0b51cf32bbc2d8b8d840.ttf",
+    "static/media/Sacramento-Regular.ttf": "/static/media/Sacramento-Regular.8e499a8cb6cdb915c291.ttf",
+    "index.html": "/index.html",
+    "main.2d0ead26.css.map": "/static/css/main.2d0ead26.css.map",
+    "main.877a160b.js.map": "/static/js/main.877a160b.js.map",
+    "787.cda612ba.chunk.js.map": "/static/js/787.cda612ba.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.2d0ead26.css",
+    "static/js/main.877a160b.js"
+  ]
+}
