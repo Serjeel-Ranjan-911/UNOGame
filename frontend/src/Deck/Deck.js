@@ -55,7 +55,28 @@ const Deck = (props) => {
 					setTimeout(() => {
 						if (props.throwCard(cardUnderProcess)) {
 							//throw was successfull
-							setSpringCards((i) => to(i)); //bring the card div back to view
+
+							// find the div throw which card was thrown
+							let temp = -1;
+							for (let i = 0; i < props.cards.length; i++) {
+								if (props.cards[i].id === cardUnderProcess) {
+									temp = i;
+									break;
+								}
+							}
+							if (temp !== -1) {
+								//hide this div before calling it back to position
+								document.getElementById("cardIdx" + temp).style.transition =
+									"opacity 0s";
+								document.getElementById("cardIdx" + temp).style.opacity = 0;
+								setSpringCards((i) => to(i)); //bring the card div back to view
+
+								setTimeout(() => {
+									document.getElementById("cardIdx" + temp).style.transition =
+										"opacity 0.5s";
+									document.getElementById("cardIdx" + temp).style.opacity = 1;
+								}, 1500);
+							}
 						} else {
 							//throw was unsuccessfull
 
@@ -88,8 +109,11 @@ const Deck = (props) => {
 	useEffect(() => {
 		if (props.cards.length > 1)
 			setAngleGap(
-				parseInt(
-					(angleSpread.right - angleSpread.left) / (numberOfCardsInoneHand - 1)
+				parseFloat(
+					(
+						(angleSpread.right - angleSpread.left) /
+						(numberOfCardsInoneHand - 1)
+					).toFixed(2)
 				)
 			);
 	}, [props.cards, angleSpread]);
@@ -136,13 +160,15 @@ const Deck = (props) => {
 								className={style.innerAnimatedDiv}
 							>
 								<div
+									id={"cardIdx" + i}
 									style={{
 										transformOrigin: "bottom center",
-										transform: `rotate(${parseInt(
-											angleSpread.left + (i % numberOfCardsInoneHand) * angleGap
-										)}deg) translateY(${
+										transform: `rotate(${(
+											angleSpread.left +
+											(i % numberOfCardsInoneHand) * angleGap
+										).toFixed(2)}deg) translateY(${
 											6 * parseInt(i / numberOfCardsInoneHand)
-										}rem)`
+										}rem)`,
 									}}
 									className={style.cardBox}
 								>
@@ -160,7 +186,11 @@ const Deck = (props) => {
 						</animated.div>
 					))}
 
-					<img className={style.avatarIcon} src={`/avatars/${props.idx}.jpeg`} alt="player avatar"/>
+				<img
+					className={style.avatarIcon}
+					src={`/avatars/${props.idx}.jpeg`}
+					alt="player avatar"
+				/>
 			</div>
 
 			<div className={style.playButtons}>
@@ -195,7 +225,7 @@ const Deck = (props) => {
 
 			<div className={style.slider}>
 				<Slider
-				tooltipVisible={false}
+					tooltipVisible={false}
 					min={-25}
 					max={25}
 					value={spreadSliderValue}

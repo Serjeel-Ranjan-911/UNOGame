@@ -71,6 +71,7 @@ p {
 .modalText {
 	font-size: 1rem;
 	color: #8f8f8f;
+	margin-bottom: 1rem;
 }
 
 .deckContainer {
@@ -112,26 +113,4 @@ p {
 	flex-wrap: wrap;
 	justify-content: center;
 	align-items: center;
-}
-
-.stack {
-	position: relative;
-    transform: translate(0,-50%);
-    width: 5rem;
-    height: 4rem;
-	user-select: none;
-}
-
-.stackCard {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: auto;
-
-	transform: rotateX(60deg) rotateY(0deg) rotateZ(-45deg);
-	
-	box-shadow: 2px 2px 20px 2px #000c2559;
-	border-radius: 5px;
-	border: 1px solid rgb(255, 255, 255);
 }

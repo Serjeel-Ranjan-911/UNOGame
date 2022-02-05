@@ -9,6 +9,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import Deck from "./Deck/Deck.js";
 import Room from "./Room/Room.js";
+import Stack from "./Stack/Stack.js";
 
 function App() {
 	const [clientId, setClientId] = useState(null);
@@ -36,7 +37,7 @@ function App() {
 	const [isModalVisible, setIsModalVisible] = useState(true);
 	const [inGame, setInGame] = useState(false);
 	const [shareableUrl, setShareableUrl] = useState(null);
-	const [orientationToggle,setOrientationToggle] = useState(false);
+	const [orientationToggle, setOrientationToggle] = useState(false);
 
 	useEffect(() => {
 		const newSocket = io("http://192.168.101.7:8000");
@@ -49,13 +50,12 @@ function App() {
 		}
 
 		//checking if device is in portraint mode
-		window.addEventListener("orientationchange", function(){
-			if(window.orientation === -90 || window.orientation === 90)
-				setOrientationToggle(true)
-			else
-				setOrientationToggle(false)
+		window.addEventListener("orientationchange", function () {
+			if (window.orientation === -90 || window.orientation === 90)
+				setOrientationToggle(true);
+			else setOrientationToggle(false);
 		});
-				
+
 		//function that give reload warning
 		const handleBeforeUnload = (e) => {
 			e.preventDefault();
@@ -68,8 +68,6 @@ function App() {
 			window.removeEventListener("beforeunload", handleBeforeUnload);
 		};
 	}, []);
-
-
 
 	useEffect(() => {
 		if (!socket) return;
@@ -88,7 +86,7 @@ function App() {
 
 		socket.on("makeGame", (res) => {
 			console.log(res.gameId);
-			setShareableUrl("Share this Game ID with your friends : " + res.gameId);
+			setShareableUrl(window.location.href + "?roomId=" + res.gameId);
 			setGameId(res.gameId);
 		});
 	}, [socket]);
@@ -238,9 +236,9 @@ function App() {
 			</div>
 		);
 	}
-	
+
 	// UI designed to be played in portrait mode
-	if(orientationToggle) {
+	if (orientationToggle) {
 		return (
 			<div className="App">
 				<div className="Container">
@@ -318,7 +316,14 @@ function App() {
 				)}
 
 				{/* show the url if user created the game */}
-				{shareableUrl ? <p className="modalText">{shareableUrl}</p> : null}
+				{shareableUrl ? (
+					<>
+						<p className="modalText">Share this game ID:-</p>
+						<p className="modalText">{gameId}</p>
+						<p className="modalText">Or share this URL with friends:-</p>
+						<a href={shareableUrl} target="_blank">{shareableUrl}</a>
+					</>
+				) : null}
 
 				{/* once user get in game he should close the modal */}
 				{inGame ? (
@@ -334,16 +339,11 @@ function App() {
 				</div>
 			)}
 
-			<div className="stackContainer">
-				<div className="stack">
-				<img style={{transform: `rotateX(60deg) rotateY(0deg) rotateZ(-45deg) translateZ(6px)`}} className="stackCard"  src="/cards/Basic/back.svg" />
-				<img style={{transform: `rotateX(60deg) rotateY(0deg) rotateZ(-45deg) translateZ(9px)`}} className="stackCard"  src="/cards/Basic/back.svg" />
-				<img style={{transform: `rotateX(60deg) rotateY(0deg) rotateZ(-45deg) translateZ(12px)`}} className="stackCard" src="/cards/Basic/back.svg" />
-				<img style={{transform: `rotateX(60deg) rotateY(0deg) rotateZ(-45deg) translateZ(15px)`}} className="stackCard" src="/cards/Basic/back.svg" />
-				<img style={{transform: `rotateX(60deg) rotateY(0deg) rotateZ(-45deg) translateZ(18px)`}} className="stackCard" src="/cards/Basic/back.svg" />
-				<img style={{transform: `rotateX(60deg) rotateY(0deg) rotateZ(-45deg) translateZ(21px)`}} className="stackCard" src={`/cards/Basic/${gameState.stackTop.type}.svg`}/>
+			{gameState && gameState.stackTop.type && (
+				<div className="stackContainer">
+					<Stack topcard={gameState.stackTop.type} />
 				</div>
-			</div>
+			)}
 
 			<div className="roomContainer">
 				<Room
