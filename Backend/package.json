@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "start": "node --experimental-json-modules index.js",
     "server": "nodemon --experimental-json-modules index.js"
   },
   "author": "",
