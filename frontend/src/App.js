@@ -40,7 +40,7 @@ function App() {
 	const [orientationToggle, setOrientationToggle] = useState(false);
 
 	useEffect(() => {
-		const newSocket = io("http://192.168.101.7:8000");
+		const newSocket = io(`${process.env.REACT_APP_LOCAL_BACKEND_URL}/`);
 		setSocket(newSocket);
 		//try to get room id from url
 		const query = new URLSearchParams(window.location.search);
