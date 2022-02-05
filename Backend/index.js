@@ -1,16 +1,25 @@
+import express from "express";
 import { v1 as uuidv1, v4 as uuidv4 } from "uuid";
-import { createServer } from "http";
 import { Server } from "socket.io";
 
-const httpServer = createServer();
-const io = new Server(httpServer, {
+import cards from "./assets/cards.json";
+
+// making the express server
+const PORT = process.env.PORT || 8000
+const app = express()	
+const server = app.listen(PORT, function () {
+	console.log(`Listening on port ${PORT}`);
+	console.log(`http://localhost:${PORT}`);
+});
+
+// running the socket on the express server
+const io = new Server(server, {
 	cors: {
 		origin: "*",
 		methods: ["GET", "POST"],
 	},
 });
 
-import cards from "./assets/cards.json";
 
 const shuffle = (cards) => {
 	//function to shuffle cards array
@@ -124,8 +133,4 @@ io.sockets.on("connection", (socket) => {
 		}
 		broadcastState(roomId);
 	});
-});
-
-io.listen(8000, () => {
-	console.log("Server running on port 8000");
 });
