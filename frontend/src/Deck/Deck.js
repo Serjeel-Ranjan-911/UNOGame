@@ -61,7 +61,7 @@ const Deck = (props) => {
 								break;
 							}
 						}
-						if (temp != -1) {
+						if (temp !== -1) {
 							//hide this div
 							document.getElementById("cardIdx" + temp).style.transition =
 								"opacity 0s";
