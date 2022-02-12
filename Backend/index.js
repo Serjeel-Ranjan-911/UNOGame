@@ -6,10 +6,10 @@ import { Server } from "socket.io";
 import cards from "./assets/cards.json";
 
 // making the express server
-const PORT = process.env.PORT || 8000
-const app = express()	
+const PORT = process.env.PORT || 8000;
+const app = express();
 
-app.use(express.static(path.join("react_files")))
+app.use(express.static(path.join("react_files")));
 
 const server = app.listen(PORT, function () {
 	console.log(`Listening on port ${PORT}`);
@@ -23,7 +23,6 @@ const io = new Server(server, {
 		methods: ["GET", "POST"],
 	},
 });
-
 
 const shuffle = (cards) => {
 	//function to shuffle cards array
@@ -65,7 +64,7 @@ io.sockets.on("connection", (socket) => {
 
 		//shuffling a fresh deck of cards for this room
 		shuffle(cards);
-		const newDeck = [...cards]
+		const newDeck = [...cards];
 
 		//generaring cards for client
 		let strippedDeck = newDeck.splice(0, 7);
@@ -83,13 +82,14 @@ io.sockets.on("connection", (socket) => {
 			deckStack: newDeck, //give a copy to room
 			currentTurn: {
 				name: req.name,
-				clientId
+				clientId,
 			},
 			stackTop: {
-				type: 'r7',
-				color: 'r',
-				number: '7'
-			}
+				type: "r7",
+				color: "r",
+				number: "7",
+			},
+			dir: 1,
 		};
 		//returning roomId to the client
 		socket.emit("makeGame", { gameId: randomRoom });
@@ -98,13 +98,31 @@ io.sockets.on("connection", (socket) => {
 	});
 
 	socket.on("joinGame", (req) => {
+		//check if the game id is present in state or not
+		if (!state[req.gameId]) {
+			socket.emit("toast", {
+				status: false,
+				message: "This Game room does not exist",
+			});
+			return;
+		}
+
+		//check if the game is full or not
+		if (state[req.gameId].players.length > 10) {
+			socket.emit("toast", {
+				status: false,
+				message: "This Game room is full",
+			});
+		}
+
 		socket.join(req.gameId);
+
 		//generaring cards for client
 		let strippedDeck = state[req.gameId].deckStack.splice(0, 7);
 
-
 		const clientId = req.clientId;
 
+		// store details about client
 		socketIdToClientId[socket.id] = clientId;
 		clientIdToRoomId[clientId] = req.gameId;
 
@@ -128,6 +146,13 @@ io.sockets.on("connection", (socket) => {
 		//delete this player from state
 		for (let i = 0; i < state[roomId].players.length; i++) {
 			if (state[roomId].players[i].clientId === clientId) {
+				//take all the cards from the player
+				// and merge it with the deck
+				state[roomId].deckStack = [
+					...state[roomId].deckStack,
+					...state[roomId].players[i].cards,
+				];
+
 				// delete all records for this player
 				state[roomId].players.splice(i, 1);
 				socketIdToClientId[socket.id] = null;
@@ -135,6 +160,188 @@ io.sockets.on("connection", (socket) => {
 				break;
 			}
 		}
+
+		// delete other details about the client
+		delete socketIdToClientId[socket.id];
+		delete clientIdToRoomId[clientId];
+
+		// if the owner left, make the next player the owner
+		if (state[roomId].owner === clientId && state[roomId].players.length > 0) {
+			state[roomId].owner = state[roomId].players[0].clientId;
+		}
+
+		// if the room is empty
+		// delete all the details related to it
+		if (state[roomId].players.length === 0) {
+			console.log("deleting room");
+			delete state[roomId];
+		}
+		broadcastState(roomId);
+	});
+
+	socket.on("playCard", (req) => {
+		// details about the client who played the card
+		const clientId = socketIdToClientId[socket.id];
+		const roomId = clientIdToRoomId[clientId];
+		const card = req.card;
+
+		// check if its current player turn to play
+		if (state[roomId].currentTurn.clientId !== clientId) {
+			socket.emit("toast", {
+				status: false,
+				message: "It is not your turn to play",
+			});
+			return;
+		}
+
+		// if the card is not in the player's hand
+		if (
+			!state[roomId].players
+				.find((player) => player.clientId === clientId)
+				.cards.includes(card.type)
+		) {
+			socket.emit("toast", {
+				status: false,
+				message: "Player do not own this card",
+			});
+			return;
+		}
+
+		// check if thrown card is playable card or not
+		if (
+			state[roomId].stackTop.color === card.color ||
+			state[roomId].stackTop.number === card.number
+		) {
+			// if the card is playable,
+			// remove the card from the player's hand
+			state[roomId].players
+				.find((player) => player.clientId === clientId)
+				.cards.splice(
+					state[roomId].players
+						.find((player) => player.clientId === clientId)
+						.cards.indexOf(card.type),
+					1
+				);
+			// add the card to the stack
+			state[roomId].stackTop = card;
+
+			//check if the card is revese card
+			if (card.type[1] === "r") {
+				state[roomId].dir *= -1;
+			}
+			//check if the card is skip card
+			let skip = 0;
+			if (card.type[1] === "s") {
+				skip = 1;
+			}
+
+			// select the next player
+			// find the index of current player
+			const currentPlayerIndex = state[roomId].players.findIndex(
+				(player) => player.clientId === clientId
+			);
+
+			// check if no card are left in the player's hand
+			if (state[roomId].players[currentPlayerIndex].cards.length === 0) {
+				socket.emit("ENDGAME", {
+					winner: state[roomId].currentTurn.name,
+				});
+				return;
+			}
+
+			// select the next players
+			const nextPlayerIndex =
+				(currentPlayerIndex +
+					state[roomId].dir +
+					skip * state[roomId].dir +
+					state[roomId].players.length) %
+				state[roomId].players.length;
+
+			// update the current turn
+			state[roomId].currentTurn = {
+				name: state[roomId].players[nextPlayerIndex].name,
+				clientId: state[roomId].players[nextPlayerIndex].clientId,
+			};
+			// broadcast this
+			broadcastState(roomId);
+		} else {
+			socket.emit("toast", {
+				status: false,
+				message: "Card is not playable",
+			});
+			return;
+		}
+	});
+
+	socket.on("drawCard", (req) => {
+		// details about the client who played the card
+		const clientId = socketIdToClientId[socket.id];
+		const roomId = clientIdToRoomId[clientId];
+		const numberOfCardsToDraw = req.numberOfCardsToDraw;
+
+		// check if its current player turn to play
+		if (state[roomId].currentTurn.clientId !== clientId) {
+			socket.emit("toast", {
+				status: false,
+				message: "It is not your turn to play",
+			});
+			return;
+		}
+
+		// check if the player has any card left
+		if (
+			state[roomId].players.find((player) => player.clientId === clientId).cards
+				.length === 0
+		) {
+			socket.emit("toast", {
+				status: false,
+				message: "You have no card left",
+			});
+			return;
+		}
+
+		// select the top card from the deck
+		const card = state[roomId].deckStack.splice(0, numberOfCardsToDraw);
+
+		// add the card to the player's hand
+		state[roomId].players
+			.find((player) => player.clientId === clientId)
+			.cards.push(...card);
+
+		// check if player has any playable card
+		let flag = false;
+		state[roomId].players
+			.find((player) => player.clientId === clientId)
+			.cards.forEach((card) => {
+				//check if this card is playable card or not
+				if (
+					card[0] === "x" ||
+					state[roomId].stackTop.color === card[0] ||
+					state[roomId].stackTop.number === card[1]
+				) {
+					flag = true;
+				}
+			});
+
+		if (!flag) {
+			// next player should play
+			const currentPlayerIndex = state[roomId].players.findIndex(
+				(player) => player.clientId === clientId
+			);
+			// select the next players
+			const nextPlayerIndex =
+				(currentPlayerIndex +
+					state[roomId].dir +
+					state[roomId].players.length) %
+				state[roomId].players.length;
+			// update the current turn
+			state[roomId].currentTurn = {
+				name: state[roomId].players[nextPlayerIndex].name,
+				clientId: state[roomId].players[nextPlayerIndex].clientId,
+			};
+		}
+
+		// broadcast this
 		broadcastState(roomId);
 	});
 });

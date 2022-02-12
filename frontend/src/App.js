@@ -28,6 +28,7 @@ function App() {
 			color: "",
 			number: "",
 		},
+		dir: 0,
 	}); //to store game state coming from server
 	const [aboutPlayer, setAboutPlayer] = useState({
 		name: "",
@@ -77,6 +78,19 @@ function App() {
 		socket.on("welcome", (res) => {
 			setClientId(res.clientId);
 		});
+
+		socket.on("toast",(res)=>{
+			if(res.status){
+				toast.success(res.message)
+			}else{
+				toast.warn(res.message)
+			}
+		})
+
+		socket.on("ENDGAME",(res)=>{
+			alert(res.winner + " won the game !!!")
+		})
+
 		socket.on("stateUpdate", (res) => {
 			// if server sent us the state this means player is in game
 			//no need display modals
@@ -110,7 +124,7 @@ function App() {
 
 	const makeGame = () => {
 		if (!aboutPlayer.name || aboutPlayer.name.length < 3) {
-			toast.warn("Please enter a valid name :exclamation:");
+			toast.warn("Please enter a valid name !");
 			return;
 		}
 
@@ -167,17 +181,22 @@ function App() {
 			return false;
 		}
 
-		//trying to replicate server call
-		if (Math.random() > 0.5) {
-			setAboutPlayer({
-				...aboutPlayer,
-				cards: aboutPlayer.cards.filter((val) => val.id !== id),
-			});
-			toast.success(type + " card was thrown");
-			return true;
-		} else {
-			return false;
-		}
+		//if card is valid then send it to server
+		socket.emit("playCard", {
+			clientId: clientId,
+			card: {
+				color: type[0],
+				number: type[1],
+				type: type,
+			}
+		});
+
+		return true;
+	};
+
+
+	const drawACard = () => {
+		socket.emit("drawCard", {numberOfCardsToDraw:1});
 	};
 
 	//random shuffler utility
@@ -208,19 +227,6 @@ function App() {
 		setAboutPlayer({
 			...aboutPlayer,
 			cards: randomShuffler([...aboutPlayer.cards]),
-		});
-	};
-
-	const drawACard = () => {
-		setAboutPlayer({
-			...aboutPlayer,
-			cards: [
-				...aboutPlayer.cards,
-				{
-					type: "x4",
-					id: uuid(),
-				},
-			],
 		});
 	};
 
@@ -356,6 +362,7 @@ function App() {
 			{aboutPlayer.cards.length > 0 && (
 				<div className="deckContainer">
 					<Deck
+						currentTurn={gameState.currentTurn.clientId===clientId}
 						idx={aboutPlayer.idx}
 						cards={aboutPlayer.cards}
 						throwCard={throwCard}
