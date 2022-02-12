@@ -21,7 +21,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build && mv build ../Backend/react_files",
+    "build": "react-scripts build && mv build ../react_build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

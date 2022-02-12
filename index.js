@@ -9,7 +9,7 @@ import cards from "./assets/cards.json";
 const PORT = process.env.PORT || 8000;
 const app = express();
 
-app.use(express.static(path.join("react_files")));
+app.use(express.static(path.join("react_build")));
 
 const server = app.listen(PORT, function () {
 	console.log(`Listening on port ${PORT}`);
