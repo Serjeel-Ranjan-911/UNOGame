@@ -3,7 +3,7 @@ import path from "path";
 import { v1 as uuidv1, v4 as uuidv4 } from "uuid";
 import { Server } from "socket.io";
 
-import cards from "./assets/cards.json";
+import cards from "./assets/cards.js";
 
 
 // making the express server

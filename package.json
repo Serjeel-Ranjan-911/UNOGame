@@ -5,8 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node --experimental-json-modules index.js",
-    "server": "nodemon --experimental-json-modules index.js"
+    "start": "node index.js",
+    "server": "nodemon index.js"
   },
   "author": "",
   "license": "ISC",
