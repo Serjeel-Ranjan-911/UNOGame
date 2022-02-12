@@ -41,7 +41,13 @@ function App() {
 	const [orientationToggle, setOrientationToggle] = useState(false);
 
 	useEffect(() => {
-		const newSocket = io(`${process.env.REACT_APP_LOCAL_BACKEND_URL}/`);
+		const newSocket = io(
+			`${
+				process.env.REACT_APP_LOCAL_BACKEND_URL
+					? process.env.REACT_APP_LOCAL_BACKEND_URL
+					: ""
+			}/`
+		);
 		setSocket(newSocket);
 		//try to get room id from url
 		const query = new URLSearchParams(window.location.search);
@@ -79,17 +85,17 @@ function App() {
 			setClientId(res.clientId);
 		});
 
-		socket.on("toast",(res)=>{
-			if(res.status){
-				toast.success(res.message)
-			}else{
-				toast.warn(res.message)
+		socket.on("toast", (res) => {
+			if (res.status) {
+				toast.success(res.message);
+			} else {
+				toast.warn(res.message);
 			}
-		})
+		});
 
-		socket.on("ENDGAME",(res)=>{
-			alert(res.winner + " won the game !!!")
-		})
+		socket.on("ENDGAME", (res) => {
+			alert(res.winner + " won the game !!!");
+		});
 
 		socket.on("stateUpdate", (res) => {
 			// if server sent us the state this means player is in game
@@ -188,15 +194,14 @@ function App() {
 				color: type[0],
 				number: type[1],
 				type: type,
-			}
+			},
 		});
 
 		return true;
 	};
 
-
 	const drawACard = () => {
-		socket.emit("drawCard", {numberOfCardsToDraw:1});
+		socket.emit("drawCard", { numberOfCardsToDraw: 1 });
 	};
 
 	//random shuffler utility
@@ -327,7 +332,9 @@ function App() {
 						<p className="modalText">Share this game ID:-</p>
 						<p className="modalText">{gameId}</p>
 						<p className="modalText">Or share this URL with friends:-</p>
-						<a href={shareableUrl} target="_blank">{shareableUrl}</a>
+						<a href={shareableUrl} target="_blank">
+							{shareableUrl}
+						</a>
 					</>
 				) : null}
 
@@ -362,7 +369,7 @@ function App() {
 			{aboutPlayer.cards.length > 0 && (
 				<div className="deckContainer">
 					<Deck
-						currentTurn={gameState.currentTurn.clientId===clientId}
+						currentTurn={gameState.currentTurn.clientId === clientId}
 						idx={aboutPlayer.idx}
 						cards={aboutPlayer.cards}
 						throwCard={throwCard}
