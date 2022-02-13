@@ -94,7 +94,12 @@ function App() {
 		});
 
 		socket.on("ENDGAME", (res) => {
-			alert(res.winner + " won the game !!!");
+			toast("🎉🎊" + res.winner + " won the game 🎊🎉",{
+				position: "top-center",
+				autoClose: 60000,
+				closeOnClick: true,
+				pauseOnHover: true,
+				});
 		});
 
 		socket.on("stateUpdate", (res) => {
@@ -260,8 +265,15 @@ function App() {
 		);
 	}
 
+	const colorCodes = {
+		r: "#ff6f6f33",
+		y: "#ffd00033",
+		b: "#6266db33",
+		g: "#68ff1c33"
+	}
+
 	return (
-		<div className="App">
+		<div className="App" style={{backgroundColor: colorCodes[gameState.stackTop.color]}}>
 			{/* This toast is for showing messages to user */}
 			<ToastContainer
 				position="bottom-center"
@@ -277,14 +289,29 @@ function App() {
 				visible={isModalVisible}
 				closable={false}
 				onOk={() => {
-					setIsModalVisible(false);
-					enterFullScreen();
+					if(!inGame){
+						toast.warn("Please make a game or join one !");
+					}
+					else{
+						setIsModalVisible(false);
+						enterFullScreen();
+					}
+
 				}}
 				onCancel={() => {
-					setIsModalVisible(false);
-					enterFullScreen();
+					if(!inGame){
+						toast.warn("Please make a game or join one !");
+					}
+					else{
+						setIsModalVisible(false);
+						enterFullScreen();
+					}
 				}}
 			>
+
+				<div className="modalWrapper">
+					<img className="logo" src="/logo192.png" alt="logo"/>
+				</div>
 				<div className="modalWrapper">
 					<p className="modalText">Your name :</p>
 					<Input
@@ -330,9 +357,9 @@ function App() {
 				{shareableUrl ? (
 					<>
 						<p className="modalText">Share this game ID:-</p>
-						<p className="modalText">{gameId}</p>
+						<p className="modalText modalHighlightText">{gameId}</p>
 						<p className="modalText">Or share this URL with friends:-</p>
-						<a href={shareableUrl} target="_blank">
+						<a className="modalHighlightText" href={shareableUrl} target="_blank">
 							{shareableUrl}
 						</a>
 					</>
@@ -340,7 +367,7 @@ function App() {
 
 				{/* once user get in game he should close the modal */}
 				{inGame ? (
-					<p className="modalText">
+					<p className="modalText" style={{marginTop:"1rem"}}>
 						Click <b>OK</b> to proceed
 					</p>
 				) : null}

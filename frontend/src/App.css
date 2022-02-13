@@ -7,6 +7,7 @@
 	background-image: url("background.svg");
 	background-repeat: repeat;
 	background-size: 200px auto;
+	transition: background-color 3s;
 	background-color: rgba(255, 208, 0, 0.1);
 	position: relative;
 }
@@ -113,4 +114,35 @@ p {
 	flex-wrap: wrap;
 	justify-content: center;
 	align-items: center;
+}
+
+@keyframes rotating {
+	0% {
+		transform: rotate3d(1, 1, 1, 0deg);
+	}
+
+	20% {
+		transform: rotate3d(1, 1, 1, 20deg);
+	}
+
+	80% {
+		transform: rotate3d(1, 1, 1, -20deg);
+	}
+
+	100% {
+		transform: rotate3d(1, 1, 1, 0deg);
+	}
+}
+
+.logo{
+	width: 30%;
+	animation: rotating 10s ease-in-out infinite;
+	filter: drop-shadow(5px 5px 5px rgba(34, 34, 34, 0.712));
+}
+
+.modalHighlightText{
+	background-color: #fff472b0;
+    border-radius: 3px;
+    padding: 2px;
+    color: #e98080;
 }

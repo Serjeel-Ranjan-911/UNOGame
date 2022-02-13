@@ -14,7 +14,7 @@ const to = (i) => ({
 	y: i * -4,
 	rot: -10 + Math.random() * 20,
 });
-const from = (i) => ({ x: 0, y: -1000, rot: 0 });
+const from = (i) => ({ x: 0, y: -1200, rot: 0 });
 
 var cardUnderProcess = ""; //global variable to store the id of card under process
 const numberOfCardsInoneHand = 7;
@@ -77,7 +77,7 @@ const Deck = (props) => {
 									document.getElementById("cardIdx" + temp).style.transition =
 										"opacity 0.5s";
 									document.getElementById("cardIdx" + temp).style.opacity = 1;
-								}, 1500);
+								}, 2000);
 							}
 						} else {
 							//throw was unsuccessfull
@@ -154,7 +154,10 @@ const Deck = (props) => {
 							style={{
 								transform: interpolate(
 									[x, y],
-									(x, y) => `translate3d(${x}px,${y}px,0)`
+									(x, y) =>
+										`translate3d(${x}px,${
+											y + 6 * parseInt(i / numberOfCardsInoneHand) * 16
+										}px,0)`
 								),
 							}}
 							className={style.outerAnimatedDiv}
@@ -170,9 +173,8 @@ const Deck = (props) => {
 										transform: `rotate(${(
 											angleSpread.left +
 											(i % numberOfCardsInoneHand) * angleGap
-										).toFixed(2)}deg) translateY(${
-											6 * parseInt(i / numberOfCardsInoneHand)
-										}rem)`,
+										).toFixed(2)}deg) 
+										`,
 									}}
 									className={style.cardBox}
 								>
@@ -219,10 +221,20 @@ const Deck = (props) => {
 					type="primary"
 					onClick={() => {
 						setToggleShowCard(true); //hide cards first
+						
+						//throws all cards
 						setTimeout(() => {
-							props.shuffle();
-							setToggleShowCard(false); //show cards again
+							setSpringCards((i) => ({...from(i),delay: i * 100 + 500})); 
+						
+							//bring all cards back
+							setTimeout(() => {
+								props.shuffle();
+								setToggleShowCard(false); //show cards again
+								setSpringCards((i) => ({...to(i),delay: i * 100 + 500,}));
+							}, props.cards.length/7*1000 + 500);
 						}, 1000);
+
+					
 					}}
 				>
 					Shuffle

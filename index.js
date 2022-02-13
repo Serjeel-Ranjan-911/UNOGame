@@ -244,9 +244,11 @@ io.sockets.on("connection", (socket) => {
 
 			// check if no card are left in the player's hand
 			if (state[roomId].players[currentPlayerIndex].cards.length === 0) {
-				socket.emit("ENDGAME", {
+				// this player wins
+				io.sockets.in(roomId).emit("ENDGAME", {
 					winner: state[roomId].currentTurn.name,
 				});
+				broadcastState(roomId);
 				return;
 			}
 
