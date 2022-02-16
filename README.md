@@ -28,7 +28,9 @@
 
 This is a online multiplayer game built with same rules as UNO classic. 
 
-https://github.com/Serjeel-Ranjan-911/UNOGame/Extra/screenrecord.mp4
+<p align="center"> 
+    <img width="30%" src="./Extra/screenrecord.gif" alt="screen recording">
+</p>
 
 <h3 align="center">Built With</h3>
 
