@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.f8a706c0.css",
-    "main.js": "/static/js/main.1e1f0119.js",
+    "main.css": "/static/css/main.dbddbf2d.css",
+    "main.js": "/static/js/main.69ae715e.js",
     "static/js/787.cda612ba.chunk.js": "/static/js/787.cda612ba.chunk.js",
     "static/media/background.svg": "/static/media/background.de132ccf2d5792960354.svg",
     "static/media/KaushanScript-Regular.ttf": "/static/media/KaushanScript-Regular.b721b739d0ff7289db4f.ttf",
@@ -14,12 +14,12 @@
     "static/media/Lato-Black.ttf": "/static/media/Lato-Black.0b51cf32bbc2d8b8d840.ttf",
     "static/media/Sacramento-Regular.ttf": "/static/media/Sacramento-Regular.8e499a8cb6cdb915c291.ttf",
     "index.html": "/index.html",
-    "main.f8a706c0.css.map": "/static/css/main.f8a706c0.css.map",
-    "main.1e1f0119.js.map": "/static/js/main.1e1f0119.js.map",
+    "main.dbddbf2d.css.map": "/static/css/main.dbddbf2d.css.map",
+    "main.69ae715e.js.map": "/static/js/main.69ae715e.js.map",
     "787.cda612ba.chunk.js.map": "/static/js/787.cda612ba.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.f8a706c0.css",
-    "static/js/main.1e1f0119.js"
+    "static/css/main.dbddbf2d.css",
+    "static/js/main.69ae715e.js"
   ]
 }
