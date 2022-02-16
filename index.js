@@ -86,11 +86,14 @@ io.sockets.on("connection", (socket) => {
 				clientId,
 			},
 			stackTop: {
-				type: "r7",
-				color: "r",
-				number: "7",
+				type: "none",
+				color: "",
+				number: "",
 			},
 			dir: 1,
+			countOfCardsToPick: 0,
+			activePlus2: false,
+			activePlus4: false
 		};
 		//returning roomId to the client
 		socket.emit("makeGame", { gameId: randomRoom });
@@ -174,7 +177,6 @@ io.sockets.on("connection", (socket) => {
 		// if the room is empty
 		// delete all the details related to it
 		if (state[roomId].players.length === 0) {
-			console.log("deleting room");
 			delete state[roomId];
 		}
 		broadcastState(roomId);
@@ -207,9 +209,28 @@ io.sockets.on("connection", (socket) => {
 			});
 			return;
 		}
+		// if +2 flag is set accept only +2 card
+		if(state[roomId].activePlus2 && card.type[1] !== "p"){
+			socket.emit("toast",{
+				status: false,
+				message: "Either throw a +2 card (or) pick cards",
+			})
+			return;
+		}
 
-		// check if thrown card is playable card or not
+		// if +4 flag is set accept only +4 card
+		if(state[roomId].activePlus4 && card.type !== "x4"){
+			socket.emit("toast",{
+				status: false,
+				message: "Either throw a +4 card (or) pick cards",
+			})
+			return;
+		}
+
+		// check if thrown card is playable card or not (OR) if it's start of the game
 		if (
+			card.type[0] === "x" ||
+			state[roomId].stackTop.type === "none" ||
 			state[roomId].stackTop.color === card.color ||
 			state[roomId].stackTop.number === card.number
 		) {
@@ -225,6 +246,40 @@ io.sockets.on("connection", (socket) => {
 				);
 			// add the card to the stack
 			state[roomId].stackTop = card;
+
+			//check if the card is +2 card
+			if(card.type[1] === "p"){
+
+				//check if this is the first +2 card
+				if(!state[roomId].activePlus2){
+					//set +2 flag
+					state[roomId].activePlus2 = true;
+					state[roomId].countOfCardsToPick = 2;
+				}
+				else{
+					state[roomId].countOfCardsToPick += 2;
+				}
+			}
+
+			//check if the card is +4 card
+			if(card.type === "x4"){
+
+				//check if this is the first +4 card
+				if(!state[roomId].activePlus4){
+					//set +2 flag
+					state[roomId].activePlus4 = true;
+					state[roomId].countOfCardsToPick = 4;
+				}
+				else{
+					state[roomId].countOfCardsToPick += 4;
+				}
+			}
+
+			//check if the card is color change card
+			if(card.type == "xc"){
+				socket.emit("chooseColor", {});
+				return;
+			}
 
 			//check if the card is revese card
 			if (card.type[1] === "r") {
@@ -276,11 +331,11 @@ io.sockets.on("connection", (socket) => {
 		}
 	});
 
-	socket.on("drawCard", (req) => {
+	socket.on("setColor",req=>{
 		// details about the client who played the card
 		const clientId = socketIdToClientId[socket.id];
 		const roomId = clientIdToRoomId[clientId];
-		const numberOfCardsToDraw = req.numberOfCardsToDraw;
+		const color = req.color;
 
 		// check if its current player turn to play
 		if (state[roomId].currentTurn.clientId !== clientId) {
@@ -291,16 +346,89 @@ io.sockets.on("connection", (socket) => {
 			return;
 		}
 
-		// check if the player has any card left
-		if (
-			state[roomId].players.find((player) => player.clientId === clientId).cards
-				.length === 0
-		) {
+		//change the active color to play
+		state[roomId].stackTop = {
+			type: "xc",
+			color: color,
+			number: ""
+		}
+
+		// select the next player
+			// find the index of current player
+			const currentPlayerIndex = state[roomId].players.findIndex(
+				(player) => player.clientId === clientId
+			);
+
+			// check if no card are left in the player's hand
+			if (state[roomId].players[currentPlayerIndex].cards.length === 0) {
+				// this player wins
+				io.sockets.in(roomId).emit("ENDGAME", {
+					winner: state[roomId].currentTurn.name,
+				});
+				broadcastState(roomId);
+				return;
+			}
+
+			// select the next players
+			const nextPlayerIndex =
+				(currentPlayerIndex +
+					state[roomId].dir +
+					state[roomId].players.length) %
+				state[roomId].players.length;
+
+			// update the current turn
+			state[roomId].currentTurn = {
+				name: state[roomId].players[nextPlayerIndex].name,
+				clientId: state[roomId].players[nextPlayerIndex].clientId,
+			};
+			// broadcast this
+			broadcastState(roomId);
+	})
+
+	socket.on("drawCard", (req) => {
+		// details about the client who played the card
+		const clientId = socketIdToClientId[socket.id];
+		const roomId = clientIdToRoomId[clientId];
+		let numberOfCardsToDraw = 1;
+
+		// check if its current player turn to play
+		if (state[roomId].currentTurn.clientId !== clientId) {
 			socket.emit("toast", {
 				status: false,
-				message: "You have no card left",
+				message: "It is not your turn to play",
 			});
 			return;
+		}
+
+		// check if deck does not contain enough cards to pick
+		if (state[roomId].deckStack.length < state[roomId].countOfCardsToPick) {
+			// make new deck
+			let newDeck = [...cards]
+			state[roomId].players.forEach((player) => {
+				player.cards.forEach((card) => {
+					newDeck.splice(newDeck.indexOf(card), 1);
+				});
+			});
+			state[roomId].deckStack = newDeck;
+		}
+
+		//check if any +2 or +4 flag is active
+		let hasPlayerPickedPlusTwoCard = false;
+		if(state[roomId].activePlus2){
+			hasPlayerPickedPlusTwoCard = true;
+			state[roomId].activePlus2 = false;
+			numberOfCardsToDraw = state[roomId].countOfCardsToPick;
+			state[roomId].countOfCardsToPick = 0;
+		}
+		
+		let hasPlayerPickedPlusFourCard = false;
+		if(state[roomId].activePlus4){
+			hasPlayerPickedPlusFourCard = true;
+			state[roomId].activePlus4 = false;
+			numberOfCardsToDraw = state[roomId].countOfCardsToPick;
+			state[roomId].countOfCardsToPick = 0;
+
+			socket.emit("chooseColor", {});
 		}
 
 		// select the top card from the deck
@@ -316,9 +444,10 @@ io.sockets.on("connection", (socket) => {
 		state[roomId].players
 			.find((player) => player.clientId === clientId)
 			.cards.forEach((card) => {
+				if(card[0] === "x")
+					return;
 				//check if this card is playable card or not
 				if (
-					card[0] === "x" ||
 					state[roomId].stackTop.color === card[0] ||
 					state[roomId].stackTop.number === card[1]
 				) {
@@ -326,7 +455,7 @@ io.sockets.on("connection", (socket) => {
 				}
 			});
 
-		if (!flag) {
+		if (!hasPlayerPickedPlusFourCard && hasPlayerPickedPlusTwoCard || !flag) {
 			// next player should play
 			const currentPlayerIndex = state[roomId].players.findIndex(
 				(player) => player.clientId === clientId

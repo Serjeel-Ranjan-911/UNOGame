@@ -35,7 +35,11 @@ function App() {
 		cards: [],
 		idx: -1,
 	}); //data shown in UI
-	const [isModalVisible, setIsModalVisible] = useState(true);
+	const [isModalVisible, setIsModalVisible] = useState(true); // modal for new game / join game
+	
+	const [isColorChangeModalVisible,setIsColorChangeModalVisible] = useState(false); //modal for color change 
+	const [selectedColor,setSelectedColor] = useState("x");
+
 	const [inGame, setInGame] = useState(false);
 	const [shareableUrl, setShareableUrl] = useState(null);
 	const [orientationToggle, setOrientationToggle] = useState(false);
@@ -114,6 +118,10 @@ function App() {
 			setShareableUrl(window.location.href + "?roomId=" + res.gameId);
 			setGameId(res.gameId);
 		});
+
+		socket.on("chooseColor",(res)=>{
+			setIsColorChangeModalVisible(true);
+		})
 	}, [socket]);
 
 	useEffect(() => {
@@ -132,6 +140,17 @@ function App() {
 			}
 		}
 	}, [gameState]);
+
+	useEffect(()=>{
+		const colorMap = {
+			"r":"red",
+			"g": "green",
+			"b": "blue",
+			"y": "yellow"
+		}
+		if(selectedColor!=="x")
+			toast.success(`${colorMap[selectedColor]} is selected`);
+	},[selectedColor])
 
 	const makeGame = () => {
 		if (!aboutPlayer.name || aboutPlayer.name.length < 3) {
@@ -170,6 +189,7 @@ function App() {
 			toast.warn("Not your turn !");
 			return false;
 		}
+		
 
 		//identify the type of card
 		let type = null;
@@ -179,14 +199,27 @@ function App() {
 			}
 		});
 		// client side check of an invalid card throw
+		if (!type) return false;
+		
+		//check if it's start of the game
+		if(gameState.stackTop.type === "none"){
+			socket.emit("playCard", {
+				clientId: clientId,
+				card: {
+					color: type[0],
+					number: type[1],
+					type: type,
+				},
+			});
+			
+			return true;
+		}
+		
 		// (check if card is action card or of valid color or number)
-		if (!type) return;
 		if (
-			type[0] !== "x" &&
-			!(
-				type[0] === gameState.stackTop.color ||
-				type[1] === gameState.stackTop.number
-			)
+			!(type[0] === "x" ||
+			type[0] === gameState.stackTop.color ||
+			type[1] === gameState.stackTop.number)
 		) {
 			toast.warn(`Can't throw this card !`);
 			return false;
@@ -373,6 +406,34 @@ function App() {
 				) : null}
 			</Modal>
 
+
+			<Modal
+				title="Choose a color"
+				visible={isColorChangeModalVisible}
+				closable={false}
+				onOk={() => {
+						socket.emit("setColor",{
+							color: selectedColor!=='x'?selectedColor: "r" //default
+						})
+						setIsColorChangeModalVisible(false);
+					}}
+					onCancel={() => {
+						socket.emit("setColor",{
+							color: selectedColor!=='x'?selectedColor: "r" //default
+						})
+						setIsColorChangeModalVisible(false);
+					}}
+					>
+
+				<div className="modalWrapper">
+					<div onClick={()=>setSelectedColor("r")} style={{backgroundColor: "red"}} className="colorPick"></div>
+					<div onClick={()=>setSelectedColor("b")} style={{backgroundColor: "blue"}} className="colorPick"></div>
+					<div onClick={()=>setSelectedColor("g")} style={{backgroundColor: "green"}} className="colorPick"></div>
+					<div onClick={()=>setSelectedColor("y")} style={{backgroundColor: "yellow"}} className="colorPick"></div>
+				</div>
+
+			</Modal>
+
 			{gameState && gameState.currentTurn.name !== "" && (
 				<div className="turnNameBox">
 					<p>{gameState.currentTurn.name}'s Turn</p>
@@ -396,6 +457,7 @@ function App() {
 			{aboutPlayer.cards.length > 0 && (
 				<div className="deckContainer">
 					<Deck
+						stackTop={gameState.stackTop.type}
 						currentTurn={gameState.currentTurn.clientId === clientId}
 						idx={aboutPlayer.idx}
 						cards={aboutPlayer.cards}

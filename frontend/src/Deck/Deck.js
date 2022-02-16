@@ -77,7 +77,7 @@ const Deck = (props) => {
 									document.getElementById("cardIdx" + temp).style.transition =
 										"opacity 0.5s";
 									document.getElementById("cardIdx" + temp).style.opacity = 1;
-								}, 2000);
+								}, 3000);
 							}
 						} else {
 							//throw was unsuccessfull
@@ -212,8 +212,20 @@ const Deck = (props) => {
 					{toggleShowCard ? "Show Cards" : "Hide Cards"}
 				</Button>
 
-				<Button ghost type="primary" onClick={props.drawACard}>
-					Pick Card
+				<Button
+					ghost
+					type="primary"
+					onClick={() => {
+						if(props.stackTop === "none"){
+							props.drawACard();
+							//ill logic but still works
+							props.throwCard(props.cards[props.cards.length-1].id);
+						}else{
+							props.drawACard();
+						}
+					}}
+				>
+					{props.stackTop === "none" ? "Start Game" : "Pick Card"}
 				</Button>
 
 				<Button
@@ -221,20 +233,18 @@ const Deck = (props) => {
 					type="primary"
 					onClick={() => {
 						setToggleShowCard(true); //hide cards first
-						
+
 						//throws all cards
 						setTimeout(() => {
-							setSpringCards((i) => ({...from(i),delay: i * 100 + 500})); 
-						
+							setSpringCards((i) => ({ ...from(i), delay: i * 100 + 500 }));
+
 							//bring all cards back
 							setTimeout(() => {
 								props.shuffle();
 								setToggleShowCard(false); //show cards again
-								setSpringCards((i) => ({...to(i),delay: i * 100 + 500,}));
-							}, props.cards.length/7*1000 + 500);
+								setSpringCards((i) => ({ ...to(i), delay: i * 100 + 500 }));
+							}, (props.cards.length / 7) * 1000 + 500);
 						}, 1000);
-
-					
 					}}
 				>
 					Shuffle
