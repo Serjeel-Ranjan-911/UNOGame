@@ -1,100 +1,4 @@
-## Socket request and responses
-
----
-
-- Client Joins the server
-
-Player is assigned an ID when socket connection is created as he visits the page
-
-Request
-
-```json
-{}
-```
-
-Response
-
-Emit "welcome" event from the client
-
-```json
-{
-    clientId: <guid>
-}
-```
-
----
-
-- Making a new Game
-
-Request
-
-Emit "makeGame" event from client
-
-```json
-{
-    clientId: <guid>
-}
-```
-
-Response
-
-Emit "makeGame" event from Server
-
-```json
-{
-    game: {
-        id: <guid>,
-        //rest of information about game
-    }
-}
-```
-
----
-
-- A player joining a game (triggers broadcast)
-
-Request
-
-Emit "joinGame" event from client
-
-```json
-{
-    clientId: <guid>,
-    gameId: <guid>
-}
-```
-
-Response
-
-```json
-{}
-```
-
----
-
-- Play a card/Play cards (triggers broadcast)
-
-Request
-
-Emit "play" event from client
-```json
-{
-    method: "play",
-    clientId: <guid>,
-    gameId: <guid>,
-    cards: [<cards played by player>]    
-}
-```
-
-Response
-
-```json
-{}
-```
-
----
-
-- Card representation in Game
+## Card representation in Game
 
 Each card in game is represented using two letters. First letter represent color and second one number.
 
@@ -112,50 +16,182 @@ Action cards have first letter as "x" representing no color
 
 ---
 
-- Game State
+## Game State
 
-This state is maintained for each room on server
+Three maps/objects are maintained on server
 
-```json
-{
-    owner: <clientId of game creater>,
-    playerTurn: <clientId of player whose turn is next>,
-    currentActive: {
-        color: <current playable color>,
-        number: <current playable number>
-    },
-    deckStack: [
-        <remaining cards>
-    ]
-    ,
-    players: [
-        {
-            clientId: <id of client>
-            name: <name of client>
-            cards: [<all cards owned by this client>]
-        }
-    ]
-}
-```
+    state
+    socketIdToClientId
+    clientIdToRoomId
 
-Other than Game state this extra data is also maintained
+- state
 
-**socketIdToClientId**
+This stores the data about each game mapped to a roomId
 
-This maps each socketId to their respective client ID
+- socketIdToClientId
 
-**clientIdToRoomId**
+This stores value mapped from socket Id to their client Id
 
-This maps each client Id to their respective room ID
+- clientIdToRoomId
+
+This stores value mapped from client Id to their respective room Id
 
 ---
+## Single Game
 
-- Broadcast State
-
-This state is broadcasted to each player on
+For single game the following data is maintained
 
 ```json
 {
-	// almost same as game state for simplicity
+    owner: //id of the owner,
+    players: [
+        {
+            clientId: //client id of this player,
+            name: // name of this player,
+            cards: // cards owned by this player,
+        },
+    ],
+    deckStack: //array of cards available in deck,
+    currentTurn: {
+        name: //name of player who should move next,
+        clientId: // it's client id,
+    },
+    stackTop: {
+        type: //type of card on top of stack,
+        color: //color of card on top of stack,
+        number: //number of card on top of stack,
+    },
+    dir: //direction of play,
+    countOfCardsToPick: //number of card to pick,
+    activePlus2: //boolean to know if +2 card is supposed to be thrown,
+    activePlus4: //boolean to know if +4 card is supposed to be thrown,
 }
 ```
+
+Currently for simplicity the same state is broadcasted to each player
+
+---
+## Socket Events
+
+### Client Side Events
+
+- connect
+
+Fires when a successfull socket connection is made
+
+- welcome 
+
+Fired when server assigns a id to this socket connection
+
+**data expected**
+```json
+{
+    clientId: //id assigned by the server
+}
+```
+
+- toast
+
+Fired when server wants to show a toast message on UI
+
+**data expected**
+```json
+{
+    status: //boolean,
+    message: //text message
+}
+
+```
+- stateUpdate
+
+Fires when server wants to update the client UI state
+
+**data expected**
+
+Total game state object
+- makeGame
+
+Fires when server creates a new game
+
+**data expected**
+
+```json
+{
+    gameId: //id of the game room
+}
+```
+
+- chooseColor
+
+Fires when server wants client to choose a new color
+
+- ENDGAME
+
+Fires when any player has won
+
+**data expected**
+```json
+{
+    winner: //name of the winner
+}
+```
+### Server Side Events
+
+- makeGame
+
+Fired when a client wants to create a new game
+
+**data expected**
+```json
+{
+    clientId: //id of client,
+    name: //name of the client
+}
+```
+
+- joinGame
+
+Fired when a client wants to join a game
+
+**data expected**
+```json
+{
+    clientId: //id of client,
+    gameId: //id of game he wants to join,
+    name: //name of the client
+}
+```
+
+- playCard
+
+Fired when a player throws a card
+
+**data expected**
+```json
+{
+    card: {
+        type: //type of card,
+        color: //color of card,
+        number: //number of card
+    }
+}
+```
+
+- setColor
+
+Fired when a client wants to change color of game
+
+**data expected**
+```json
+{
+    color: //chosen color
+}
+```
+
+- drawCard
+
+Fired when a client wants to pick a card
+
+- disconnecting
+
+Fired when a client has disconnected from the server

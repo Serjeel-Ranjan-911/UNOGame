@@ -1,14 +1,14 @@
 {
   "name": "backend",
+  "author": "Serjeel Ranjan",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node index.js",
-    "server": "nodemon index.js"
+    "start": "node socket.js",
+    "server": "nodemon socket.js"
   },
-  "author": "",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",

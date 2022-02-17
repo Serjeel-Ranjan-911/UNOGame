@@ -6,27 +6,21 @@
 
 - for 2 to 10 players
 
-- On each turn player will be given 1 min to move. On 30 sec game will show suggesstion on which card to play (toggleable feature)
-
 ****
 
 ## Frontend
 
 - Hand of cards will be shown in main playing screen.
 
-Player can select the cards for playing by tapping on the cards.
+Player can throw the card by sliding them.
 
-- A menu window which will contain **settings**, **rules**, **about** and any other options.
+- A menu window which will contain **settings**, **about** and any other options.
 
-**rules**:-
-
-A list of rules for the game, some of the rules can be enabled/disabled based upon game creater choice.
+For simplicity all the states about game will be maintained in App.js file itself
 
 ****
 
 ## Backend
-
-- not focusing on using nginx now
 
 - Game Creater will create room which others can join.
 

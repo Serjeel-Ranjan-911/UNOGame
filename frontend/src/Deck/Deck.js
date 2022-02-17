@@ -31,7 +31,7 @@ const Deck = (props) => {
 	const [spreadSliderValue, setSpreadSliderValue] = useState(0);
 	const [toggleShowCard, setToggleShowCard] = useState(false);
 
-	// for gestures
+	// for gestures animations
 	const [springCards, setSpringCards] = useSprings(props.cards.length, (i) => ({
 		...to(i),
 		from: from(i),

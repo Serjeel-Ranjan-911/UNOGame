@@ -26,7 +26,7 @@
 
 ## About The Project
 
-This is a online multiplayer game built with same rules as UNO classic. 
+This is a online multiplayer game built to play with same rules as UNO classic. Check the documents for full details
 
 <p align="center"> 
     <img width="30%" src="./Extra/screenrecord.gif" alt="screen recording">

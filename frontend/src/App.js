@@ -7,15 +7,18 @@ import { Input, Button, Modal } from "antd";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+import { enterFullScreen, randomShuffler, colorCodes } from "./util.js";
+
 import Deck from "./Deck/Deck.js";
 import Room from "./Room/Room.js";
 import Stack from "./Stack/Stack.js";
 
 function App() {
-	const [clientId, setClientId] = useState(null);
-	const [gameId, setGameId] = useState("");
-	const [socket, setSocket] = useState(null);
+	const [clientId, setClientId] = useState(null); //user id given to player by server
+	const [gameId, setGameId] = useState(""); // game id the player is in
+	const [socket, setSocket] = useState(null); // socket connection
 	const [gameState, setGameState] = useState({
+		// full state of the game
 		owner: "",
 		players: [],
 		deckState: [],
@@ -29,22 +32,27 @@ function App() {
 			number: "",
 		},
 		dir: 0,
-	}); //to store game state coming from server
+	});
+
 	const [aboutPlayer, setAboutPlayer] = useState({
+		//store information about single player
 		name: "",
 		cards: [],
 		idx: -1,
 	}); //data shown in UI
 	const [isModalVisible, setIsModalVisible] = useState(true); // modal for new game / join game
-	
-	const [isColorChangeModalVisible,setIsColorChangeModalVisible] = useState(false); //modal for color change 
-	const [selectedColor,setSelectedColor] = useState("x");
+
+	const [isColorChangeModalVisible, setIsColorChangeModalVisible] =
+		useState(false); //modal for color change
+	const [selectedColor, setSelectedColor] = useState("x");
 
 	const [inGame, setInGame] = useState(false);
 	const [shareableUrl, setShareableUrl] = useState(null);
 	const [orientationToggle, setOrientationToggle] = useState(false);
 
+	//effect for page load
 	useEffect(() => {
+		// open a new socket connection with server
 		const newSocket = io(
 			`${
 				process.env.REACT_APP_LOCAL_BACKEND_URL
@@ -52,6 +60,7 @@ function App() {
 					: ""
 			}/`
 		);
+
 		setSocket(newSocket);
 		//try to get room id from url
 		const query = new URLSearchParams(window.location.search);
@@ -80,11 +89,15 @@ function App() {
 		};
 	}, []);
 
+	//effect for socket connection
+	//setting all events here
 	useEffect(() => {
 		if (!socket) return;
+
 		socket.on("connect", () => {
-			//code on connect
+			toast("Connected to the Server 🤟!!!");
 		});
+
 		socket.on("welcome", (res) => {
 			setClientId(res.clientId);
 		});
@@ -97,36 +110,36 @@ function App() {
 			}
 		});
 
-		socket.on("ENDGAME", (res) => {
-			toast("🎉🎊" + res.winner + " won the game 🎊🎉",{
-				position: "top-center",
-				autoClose: 60000,
-				closeOnClick: true,
-				pauseOnHover: true,
-				});
-		});
-
 		socket.on("stateUpdate", (res) => {
-			// if server sent us the state this means player is in game
-			//no need display modals
 			setInGame(true);
 			setGameState(res);
 		});
 
 		socket.on("makeGame", (res) => {
-			console.log(res.gameId);
 			setShareableUrl(window.location.href + "?roomId=" + res.gameId);
 			setGameId(res.gameId);
 		});
 
-		socket.on("chooseColor",(res)=>{
+		socket.on("chooseColor", () => {
 			setIsColorChangeModalVisible(true);
-		})
+		});
+
+		socket.on("ENDGAME", (res) => {
+			toast("🎉🎊" + res.winner + " won the game 🎊🎉", {
+				position: "top-center",
+				autoClose: 60000,
+				closeOnClick: true,
+				pauseOnHover: true,
+			});
+		});
 	}, [socket]);
 
+	//effect for game state update
 	useEffect(() => {
-		console.log(gameState);
 		if (!gameState) return;
+
+		// set details about our current player
+		// each player card is given uuid for UI purpose
 		for (let i = 0; i < gameState.players.length; i++) {
 			if (gameState.players[i].clientId === clientId) {
 				setAboutPlayer({
@@ -141,16 +154,16 @@ function App() {
 		}
 	}, [gameState]);
 
-	useEffect(()=>{
+	useEffect(() => {
 		const colorMap = {
-			"r":"red",
-			"g": "green",
-			"b": "blue",
-			"y": "yellow"
-		}
-		if(selectedColor!=="x")
+			r: "Red",
+			g: "Green",
+			b: "Blue",
+			y: "Yellow",
+		};
+		if (selectedColor !== "x")
 			toast.success(`${colorMap[selectedColor]} is selected`);
-	},[selectedColor])
+	}, [selectedColor]);
 
 	const makeGame = () => {
 		if (!aboutPlayer.name || aboutPlayer.name.length < 3) {
@@ -182,14 +195,13 @@ function App() {
 		});
 	};
 
-	//returns true if server accepted otherwise false
+	//function to throw a card
 	const throwCard = (id) => {
 		//client side check for an invalid player throw
 		if (clientId !== gameState.currentTurn.clientId) {
 			toast.warn("Not your turn !");
 			return false;
 		}
-		
 
 		//identify the type of card
 		let type = null;
@@ -200,26 +212,14 @@ function App() {
 		});
 		// client side check of an invalid card throw
 		if (!type) return false;
-		
-		//check if it's start of the game
-		if(gameState.stackTop.type === "none"){
-			socket.emit("playCard", {
-				clientId: clientId,
-				card: {
-					color: type[0],
-					number: type[1],
-					type: type,
-				},
-			});
-			
-			return true;
-		}
-		
+
 		// (check if card is action card or of valid color or number)
 		if (
-			!(type[0] === "x" ||
-			type[0] === gameState.stackTop.color ||
-			type[1] === gameState.stackTop.number)
+			!(gameState.stackTop.type === "none" || //check if it's start of the game
+				type[0] === "x" ||
+				type[0] === gameState.stackTop.color ||
+				type[1] === gameState.stackTop.number
+			)
 		) {
 			toast.warn(`Can't throw this card !`);
 			return false;
@@ -238,31 +238,9 @@ function App() {
 		return true;
 	};
 
+	//function to pick a card
 	const drawACard = () => {
 		socket.emit("drawCard", { numberOfCardsToDraw: 1 });
-	};
-
-	//random shuffler utility
-
-	const randomShuffler = (arr) => {
-		//function to shuffle arr array
-		for (var i = arr.length - 1; i > 0; i--) {
-			var j = Math.floor(Math.random() * (i + 1));
-			var temp = arr[i];
-			arr[i] = arr[j];
-			arr[j] = temp;
-		}
-		return arr;
-	};
-
-	const enterFullScreen = () => {
-		var el = document.body;
-		var requestMethod =
-			el.requestFullScreen ||
-			el.webkitRequestFullScreen ||
-			el.mozRequestFullScreen ||
-			el.msRequestFullScreen;
-		requestMethod.call(el);
 	};
 
 	//shuffle cards in hand
@@ -273,7 +251,7 @@ function App() {
 		});
 	};
 
-	// can't play on desktop right now :(
+	// can't play on desktop right now 😞
 	if (isDesktop) {
 		return (
 			<div className="App">
@@ -298,15 +276,11 @@ function App() {
 		);
 	}
 
-	const colorCodes = {
-		r: "#ff6f6f33",
-		y: "#ffd00033",
-		b: "#6266db33",
-		g: "#68ff1c33"
-	}
-
 	return (
-		<div className="App" style={{backgroundColor: colorCodes[gameState.stackTop.color]}}>
+		<div
+			className="App"
+			style={{ backgroundColor: colorCodes[gameState.stackTop.color] }}
+		>
 			{/* This toast is for showing messages to user */}
 			<ToastContainer
 				position="bottom-center"
@@ -322,28 +296,24 @@ function App() {
 				visible={isModalVisible}
 				closable={false}
 				onOk={() => {
-					if(!inGame){
+					if (!inGame) {
 						toast.warn("Please make a game or join one !");
-					}
-					else{
+					} else {
 						setIsModalVisible(false);
 						enterFullScreen();
 					}
-
 				}}
 				onCancel={() => {
-					if(!inGame){
+					if (!inGame) {
 						toast.warn("Please make a game or join one !");
-					}
-					else{
+					} else {
 						setIsModalVisible(false);
 						enterFullScreen();
 					}
 				}}
 			>
-
 				<div className="modalWrapper">
-					<img className="logo" src="/logo192.png" alt="logo"/>
+					<img className="logo" src="/logo192.png" alt="logo" />
 				</div>
 				<div className="modalWrapper">
 					<p className="modalText">Your name :</p>
@@ -392,7 +362,11 @@ function App() {
 						<p className="modalText">Share this game ID:-</p>
 						<p className="modalText modalHighlightText">{gameId}</p>
 						<p className="modalText">Or share this URL with friends:-</p>
-						<a className="modalHighlightText" href={shareableUrl} target="_blank">
+						<a
+							className="modalHighlightText"
+							href={shareableUrl}
+							target="_blank"
+						>
 							{shareableUrl}
 						</a>
 					</>
@@ -400,38 +374,52 @@ function App() {
 
 				{/* once user get in game he should close the modal */}
 				{inGame ? (
-					<p className="modalText" style={{marginTop:"1rem"}}>
+					<p className="modalText" style={{ marginTop: "1rem" }}>
 						Click <b>OK</b> to proceed
 					</p>
 				) : null}
 			</Modal>
 
-
+			{/* This modal is for choosing color */}
 			<Modal
 				title="Choose a color"
 				visible={isColorChangeModalVisible}
 				closable={false}
 				onOk={() => {
-						socket.emit("setColor",{
-							color: selectedColor!=='x'?selectedColor: "r" //default
-						})
-						setIsColorChangeModalVisible(false);
-					}}
-					onCancel={() => {
-						socket.emit("setColor",{
-							color: selectedColor!=='x'?selectedColor: "r" //default
-						})
-						setIsColorChangeModalVisible(false);
-					}}
-					>
-
+					socket.emit("setColor", {
+						color: selectedColor !== "x" ? selectedColor : "r", //default
+					});
+					setIsColorChangeModalVisible(false);
+				}}
+				onCancel={() => {
+					socket.emit("setColor", {
+						color: selectedColor !== "x" ? selectedColor : "r", //default
+					});
+					setIsColorChangeModalVisible(false);
+				}}
+			>
 				<div className="modalWrapper">
-					<div onClick={()=>setSelectedColor("r")} style={{backgroundColor: "red"}} className="colorPick"></div>
-					<div onClick={()=>setSelectedColor("b")} style={{backgroundColor: "blue"}} className="colorPick"></div>
-					<div onClick={()=>setSelectedColor("g")} style={{backgroundColor: "green"}} className="colorPick"></div>
-					<div onClick={()=>setSelectedColor("y")} style={{backgroundColor: "yellow"}} className="colorPick"></div>
+					<div
+						onClick={() => setSelectedColor("r")}
+						style={{ backgroundColor: "red" }}
+						className="colorPick"
+					></div>
+					<div
+						onClick={() => setSelectedColor("b")}
+						style={{ backgroundColor: "blue" }}
+						className="colorPick"
+					></div>
+					<div
+						onClick={() => setSelectedColor("g")}
+						style={{ backgroundColor: "green" }}
+						className="colorPick"
+					></div>
+					<div
+						onClick={() => setSelectedColor("y")}
+						style={{ backgroundColor: "yellow" }}
+						className="colorPick"
+					></div>
 				</div>
-
 			</Modal>
 
 			{gameState && gameState.currentTurn.name !== "" && (
