@@ -7,7 +7,7 @@ import { state } from "./state.js";
 // running the socket on the express server
 export const io = new Server(server, {
 	cors: {
-		origin: "*",
+		origin: (process.env.production == "true") ? "https://uno-game-serjeel.herokuapp.com/" : "*",
 		methods: ["GET", "POST"],
 	},
 });

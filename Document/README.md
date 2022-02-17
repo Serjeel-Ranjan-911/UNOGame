@@ -4,7 +4,7 @@ Each card in game is represented using two letters. First letter represent color
 
 Action cards have first letter as "x" representing no color
 
-```json
+```
 [
 	"r1","r2","r3","r4","r5","r6","r7","r8","r9","rs","rr","rp",
     "g1","g2","g3","g4","g5","g6","g7","g8","g9","gs","gr","gp",
@@ -41,7 +41,7 @@ This stores value mapped from client Id to their respective room Id
 
 For single game the following data is maintained
 
-```json
+```
 {
     owner: //id of the owner,
     players: [
@@ -84,7 +84,7 @@ Fires when a successfull socket connection is made
 Fired when server assigns a id to this socket connection
 
 **data expected**
-```json
+```
 {
     clientId: //id assigned by the server
 }
@@ -95,7 +95,7 @@ Fired when server assigns a id to this socket connection
 Fired when server wants to show a toast message on UI
 
 **data expected**
-```json
+```
 {
     status: //boolean,
     message: //text message
@@ -115,7 +115,7 @@ Fires when server creates a new game
 
 **data expected**
 
-```json
+```
 {
     gameId: //id of the game room
 }
@@ -130,7 +130,7 @@ Fires when server wants client to choose a new color
 Fires when any player has won
 
 **data expected**
-```json
+```
 {
     winner: //name of the winner
 }
@@ -142,7 +142,7 @@ Fires when any player has won
 Fired when a client wants to create a new game
 
 **data expected**
-```json
+```
 {
     clientId: //id of client,
     name: //name of the client
@@ -154,7 +154,7 @@ Fired when a client wants to create a new game
 Fired when a client wants to join a game
 
 **data expected**
-```json
+```
 {
     clientId: //id of client,
     gameId: //id of game he wants to join,
@@ -167,7 +167,7 @@ Fired when a client wants to join a game
 Fired when a player throws a card
 
 **data expected**
-```json
+```
 {
     card: {
         type: //type of card,
@@ -182,7 +182,7 @@ Fired when a player throws a card
 Fired when a client wants to change color of game
 
 **data expected**
-```json
+```
 {
     color: //chosen color
 }
