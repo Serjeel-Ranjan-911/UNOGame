@@ -13,6 +13,7 @@ export const playCard = (socket, req) => {
 
 		// check if its current player turn to play
 		if (state[roomId].currentTurn.clientId !== clientId) {
+			console.log(state[roomId].currentTurn.clientId , clientId)
 			socket.emit("toast", {
 				status: false,
 				message: "It is not your turn to play",

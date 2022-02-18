@@ -25,6 +25,14 @@ export const broadcastState = (roomId) => {
 	io.sockets.in(roomId).emit("stateUpdate", state[roomId]);
 };
 
+//boradcast message to all
+export const broadcastMessage = (roomId, message) => {	
+	io.sockets.in(roomId).emit("toast", {
+		status: true,
+		message,
+	});
+};
+
 export const Endgame = (roomId) => {
 	io.sockets.in(roomId).emit("ENDGAME", {
 		winner: state[roomId].currentTurn.name,

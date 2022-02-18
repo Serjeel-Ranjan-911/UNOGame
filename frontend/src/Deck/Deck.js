@@ -217,9 +217,7 @@ const Deck = (props) => {
 					type="primary"
 					onClick={() => {
 						if(props.stackTop === "none"){
-							props.drawACard();
-							//ill logic but still works
-							props.throwCard(props.cards[props.cards.length-1].id);
+							props.toast("Throw any card to start the game 😊");
 						}else{
 							props.drawACard();
 						}

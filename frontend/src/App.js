@@ -452,6 +452,9 @@ function App() {
 						throwCard={throwCard}
 						shuffle={shuffle}
 						drawACard={drawACard}
+						toast={(message)=>{
+							toast(message);
+						}}
 					></Deck>
 				</div>
 			)}

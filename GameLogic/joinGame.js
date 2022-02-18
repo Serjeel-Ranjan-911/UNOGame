@@ -1,11 +1,10 @@
-import { broadcastState } from "../socket.js";
+import { broadcastState, broadcastMessage } from "../socket.js";
 import { state, socketIdToClientId, clientIdToRoomId } from "../state.js";
 
-export const joinGame = (socket,req) => {
+export const joinGame = (socket, req) => {
 	try {
-		if(!req.gameId)
-			throw Error("No gameId provided");
-		
+		if (!req.gameId) throw Error("No gameId provided");
+
 		//check if the game id is present in state or not
 		if (!state[req.gameId]) {
 			socket.emit("toast", {
@@ -43,6 +42,9 @@ export const joinGame = (socket,req) => {
 		});
 		//broadcast This
 		broadcastState(req.gameId);
+
+		//Inform others in room
+		broadcastMessage(req.gameId, req.name + " has joined the game 🤝");
 	} catch (err) {
 		console.log(err.message);
 		socket.emit("toast", {

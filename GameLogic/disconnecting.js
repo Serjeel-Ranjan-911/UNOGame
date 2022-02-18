@@ -1,4 +1,4 @@
-import { broadcastState } from "../socket.js";
+import { broadcastState, broadcastMessage } from "../socket.js";
 import { state, socketIdToClientId, clientIdToRoomId } from "../state.js";
 
 export const disconnecting = (socket, req) => {
@@ -9,6 +9,7 @@ export const disconnecting = (socket, req) => {
 
 		if (!roomId || !clientId) return;
 
+		let playerName = "🥺";
 		//delete this player from state
 		for (let i = 0; i < state[roomId].players.length; i++) {
 			if (state[roomId].players[i].clientId === clientId) {
@@ -19,6 +20,7 @@ export const disconnecting = (socket, req) => {
 					...state[roomId].players[i].cards,
 				];
 
+				playerName = state[roomId].players[i].name;
 				// delete all records for this player
 				state[roomId].players.splice(i, 1);
 				socketIdToClientId[socket.id] = null;
@@ -42,6 +44,9 @@ export const disconnecting = (socket, req) => {
 			delete state[roomId];
 		}
 		broadcastState(roomId);
+
+		//Inform others in room
+		broadcastMessage(roomId, playerName + " has left the game 😢");
 	} catch (err) {
 		console.log(err.message);
 		socket.emit("toast", {
