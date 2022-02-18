@@ -51,5 +51,6 @@ export const joinGame = (socket, req) => {
 			status: false,
 			message: "Error occured while joining the game 🆘",
 		});
+		broadcastState(req.gameId);
 	}
 };

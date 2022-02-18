@@ -1,11 +1,12 @@
 import { broadcastState } from "../socket.js";
 import { state, socketIdToClientId, clientIdToRoomId } from "../state.js";
 
-export const drawCard = (socket,req) => {
+export const drawCard = (socket, req) => {
+	// details about the client who played the card
+	const clientId = socketIdToClientId[socket.id];
+	const roomId = clientIdToRoomId[clientId];
+
 	try {
-		// details about the client who played the card
-		const clientId = socketIdToClientId[socket.id];
-		const roomId = clientIdToRoomId[clientId];
 		let numberOfCardsToDraw = 1;
 
 		if (!clientId || !roomId) return;
@@ -73,7 +74,16 @@ export const drawCard = (socket,req) => {
 				}
 			});
 
-		if ((!hasPlayerPickedPlusFourCard && hasPlayerPickedPlusTwoCard) || !flag) {
+		//check if player has picked any +4
+		if (hasPlayerPickedPlusFourCard) {
+			flag = true;
+		}
+		//check if player has picked any +2
+		if (hasPlayerPickedPlusTwoCard) {
+			flag = false;
+		}
+
+		if (!flag) {
 			// next player should play
 			const currentPlayerIndex = state[roomId].players.findIndex(
 				(player) => player.clientId === clientId
@@ -99,5 +109,6 @@ export const drawCard = (socket,req) => {
 			status: false,
 			message: "Error occured while picking a card 🆘",
 		});
+		broadcastState(roomId);
 	}
 };

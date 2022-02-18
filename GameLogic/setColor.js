@@ -2,14 +2,15 @@ import { broadcastState, Endgame } from "../socket.js";
 import { state, socketIdToClientId, clientIdToRoomId } from "../state.js";
 
 export const setColor = (socket, req) => {
+	// details about the client who played the card
+	const clientId = socketIdToClientId[socket.id];
+	const roomId = clientIdToRoomId[clientId];
+
 	try {
-		// details about the client who played the card
-		const clientId = socketIdToClientId[socket.id];
-		const roomId = clientIdToRoomId[clientId];
 		let color = req.color;
 
-		if(!color || !(["r", "b", "g", "y"].includes(color))) {
-			color = "r";
+		if (!color || !["r", "b", "g", "y"].includes(color)) {
+			color = "r"; //default color
 		}
 
 		// check if its current player turn to play
@@ -59,5 +60,6 @@ export const setColor = (socket, req) => {
 			status: false,
 			message: "Error occured while changing the color 🆘",
 		});
+		broadcastState(roomId);
 	}
 };

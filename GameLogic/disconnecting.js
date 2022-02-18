@@ -2,11 +2,11 @@ import { broadcastState, broadcastMessage } from "../socket.js";
 import { state, socketIdToClientId, clientIdToRoomId } from "../state.js";
 
 export const disconnecting = (socket, req) => {
-	try {
-		// details about the client who left the server
-		const clientId = socketIdToClientId[socket.id];
-		const roomId = clientIdToRoomId[clientId];
+	// details about the client who left the server
+	const clientId = socketIdToClientId[socket.id];
+	const roomId = clientIdToRoomId[clientId];
 
+	try {
 		if (!roomId || !clientId) return;
 
 		let playerName = "🥺";
@@ -53,5 +53,6 @@ export const disconnecting = (socket, req) => {
 			status: false,
 			message: "Error occured while disconnecting 🆘",
 		});
+		broadcastState(roomId);
 	}
 };

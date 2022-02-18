@@ -2,18 +2,18 @@ import { broadcastState, Endgame } from "../socket.js";
 import { state, socketIdToClientId, clientIdToRoomId } from "../state.js";
 
 export const playCard = (socket, req) => {
+	// details about the client who played the card
+	const clientId = socketIdToClientId[socket.id];
+	const roomId = clientIdToRoomId[clientId];
+
 	try {
-		// details about the client who played the card
-		const clientId = socketIdToClientId[socket.id];
-		const roomId = clientIdToRoomId[clientId];
 		const card = req.card;
 
-		if(!card)
-			throw Error("No card provided");
+		if (!card) throw Error("No card provided");
 
 		// check if its current player turn to play
 		if (state[roomId].currentTurn.clientId !== clientId) {
-			console.log(state[roomId].currentTurn.clientId , clientId)
+			console.log(state[roomId].currentTurn.clientId, clientId);
 			socket.emit("toast", {
 				status: false,
 				message: "It is not your turn to play",
@@ -125,12 +125,16 @@ export const playCard = (socket, req) => {
 			}
 
 			// select the next players
-			const nextPlayerIndex =
+			let nextPlayerIndex =
 				(currentPlayerIndex +
 					state[roomId].dir +
 					skip * state[roomId].dir +
 					state[roomId].players.length) %
 				state[roomId].players.length;
+
+			if (card.type[1] === "r") {
+				nextPlayerIndex = currentPlayerIndex; //same player should play
+			}
 
 			// update the current turn
 			state[roomId].currentTurn = {
@@ -152,5 +156,6 @@ export const playCard = (socket, req) => {
 			status: false,
 			message: "Error occured while throwing a card 🆘",
 		});
+		broadcastState(roomId);
 	}
 };
