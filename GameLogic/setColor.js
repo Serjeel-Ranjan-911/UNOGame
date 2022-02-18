@@ -6,7 +6,11 @@ export const setColor = (socket, req) => {
 		// details about the client who played the card
 		const clientId = socketIdToClientId[socket.id];
 		const roomId = clientIdToRoomId[clientId];
-		const color = req.color;
+		let color = req.color;
+
+		if(!color || !(["r", "b", "g", "y"].includes(color))) {
+			color = "r";
+		}
 
 		// check if its current player turn to play
 		if (state[roomId].currentTurn.clientId !== clientId) {
